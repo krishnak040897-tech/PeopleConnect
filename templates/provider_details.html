@@ -402,16 +402,17 @@
     <div class="carousel-track" id="carouselTrack">
         {% for img in business_images %}
         <div class="carousel-slide">
-            <img src="/uploads/{{ img.image_path }}" alt="{{ provider.business_name }}" loading="{% if loop.first %}eager{% else %}lazy{% endif %}">
+            <!-- UPDATED IMAGE SOURCE LOGIC -->
+            <img src="{{ img.image_path if img.image_path.startswith('http') else '/uploads/' + img.image_path }}" alt="{{ provider.business_name }}" loading="{% if loop.first %}eager{% else %}lazy{% endif %}">
             <div class="slide-overlay"></div>
         </div>
         {% endfor %}
     </div>
     <button class="carousel-arrow prev" id="carouselPrev" onclick="event.stopPropagation(); carouselGo(-1)" aria-label="Previous image">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6-6"/></svg>
     </button>
     <button class="carousel-arrow next" id="carouselNext" onclick="event.stopPropagation(); carouselGo(1)" aria-label="Next image">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6 6-6-6"/></svg>
     </button>
     <div class="carousel-dots" id="carouselDots" onclick="event.stopPropagation();">
         {% for img in business_images %}
@@ -424,13 +425,15 @@
 {% elif total_biz_images == 1 %}
 <!-- Single business image -->
 <div class="carousel-single-image" onclick="openLightbox(0)">
-    <img src="/uploads/{{ business_images[0].image_path }}" alt="{{ provider.business_name }}" loading="eager">
+    <!-- UPDATED IMAGE SOURCE LOGIC -->
+    <img src="{{ business_images[0].image_path if business_images[0].image_path.startswith('http') else '/uploads/' + business_images[0].image_path }}" alt="{{ provider.business_name }}" loading="eager">
 </div>
 
 {% elif provider.profile_image %}
 <!-- Fallback: profile image as banner -->
 <div class="carousel-single-image" onclick="openLightbox(0)">
-    <img src="/uploads/{{ provider.profile_image }}" alt="{{ provider.business_name }}" loading="eager">
+    <!-- UPDATED IMAGE SOURCE LOGIC -->
+    <img src="{{ provider.profile_image if provider.profile_image.startswith('http') else '/uploads/' + provider.profile_image }}" alt="{{ provider.business_name }}" loading="eager">
 </div>
 
 {% else %}
@@ -440,8 +443,9 @@
 
 <header class="provider-header-row" id="profileDetailsTargetHeaderRow" data-address="{{ provider.address or '' }} {{ provider.area }} {{ provider.city }}">
     <div class="provider-focal-avatar">
+        <!-- UPDATED IMAGE SOURCE LOGIC -->
         {% if provider.profile_image %}
-            <img src="/uploads/{{ provider.profile_image }}" alt="{{ provider.business_name }}">
+            <img src="{{ provider.profile_image if provider.profile_image.startswith('http') else '/uploads/' + provider.profile_image }}" alt="{{ provider.business_name }}">
         {% else %}
             <div class="avatar-placeholder">
                 {{ provider.owner_name[0]|upper if provider.owner_name else 'P' }}
@@ -619,7 +623,7 @@
             
             <a href="https://wa.me/91{{ provider.phone }}" class="btn btn-secondary btn-lg btn-whatsapp-brand" target="_blank" rel="noopener" style="border-color:#25d366; color:#128C7E; background:#f0fdf4;">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.328-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.007-.242-.593-.487-.51-.669-.51-.173 0-.371-.01-.57-.01-.198 0-.52.074-.792.401-.272.329-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.36 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.36 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.22 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.328-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.007-.242-.593-.487-.51-.669-.51-.173 0-.371-.01-.57-.01-.198 0-.52.074-.792.401-.272.329-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.36 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.22 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                 </svg>
                 <span>Chat on WhatsApp</span>
             </a>
@@ -656,7 +660,7 @@
         <span>Call Now</span>
     </a>
     <a href="https://wa.me/91{{ provider.phone }}" class="dock-btn btn-dock-whatsapp" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.328-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.007-.242-.593-.487-.51-.669-.51-.173 0-.371-.01-.57-.01-.198 0-.52.074-.792.401-.272.329-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.36 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.36 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.22 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.328-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.007-.242-.593-.487-.51-.669-.51-.173 0-.371-.01-.57-.01-.198 0-.52.074-.792.401-.272.329-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.36 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.22 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         <span>WhatsApp</span>
     </a>
     <a href="https://www.google.com/maps/search/?api=1&query={{ (provider.business_name + ' ' + provider.area + ' ' + provider.city)|urlencode }}" class="dock-btn btn-dock-map" target="_blank" rel="noopener">
@@ -802,12 +806,21 @@
     const lightbox = document.getElementById('imageLightbox');
     const lightboxImg = document.getElementById('lightboxImage');
     
+    // UPDATED LIGHTBOX ARRAY GENERATION
     const businessImages = [
         {% for img in business_images %}
-            "/uploads/{{ img.image_path }}"{% if not loop.last %},{% endif %}
+            {% if img.image_path.startswith('http') %}
+                "{{ img.image_path }}"{% if not loop.last %},{% endif %}
+            {% else %}
+                "/uploads/{{ img.image_path }}"{% if not loop.last %},{% endif %}
+            {% endif %}
         {% endfor %}
         {% if total_biz_images == 0 and provider.profile_image %}
-            "/uploads/{{ provider.profile_image }}"
+            {% if provider.profile_image.startswith('http') %}
+                "{{ provider.profile_image }}"
+            {% else %}
+                "/uploads/{{ provider.profile_image }}"
+            {% endif %}
         {% endif %}
     ];
 
@@ -889,21 +902,30 @@
 
             if (data.favorited) {
                 if (btn) btn.classList.add('active');
-                if (hBadge) hBadge.classList.add('active');
-                if (hIcon) { hIcon.setAttribute('fill', 'var(--red)'); hIcon.setAttribute('stroke', 'var(--red)'); }
-                if (hText) hText.textContent = 'Saved';
+                if (btn.querySelector('svg')) btn.querySelector('svg').setAttribute('fill', 'var(--red)');
+                if (btn.querySelector('svg')) btn.querySelector('svg').setAttribute('stroke', 'var(--red)');
+                if (btn.querySelector('span')) btn.querySelector('span').innerText = 'Saved to Bookmarks';
+                
+                if (hBadge) {
+                    hBadge.classList.add('active');
+                    hIcon.setAttribute('fill', 'var(--red)');
+                    hIcon.setAttribute('stroke', 'var(--red)');
+                    hText.innerText = 'Saved';
+                }
             } else {
                 if (btn) btn.classList.remove('active');
-                if (hBadge) hBadge.classList.remove('active');
-                if (hIcon) { hIcon.setAttribute('fill', 'none'); hIcon.setAttribute('stroke', 'currentColor'); }
-                if (hText) hText.textContent = 'Save';
+                if (btn.querySelector('svg')) btn.querySelector('svg').setAttribute('fill', 'none');
+                if (btn.querySelector('svg')) btn.querySelector('svg').setAttribute('stroke', 'currentColor');
+                if (btn.querySelector('span')) btn.querySelector('span').innerText = 'Bookmark Provider';
+                
+                if (hBadge) {
+                    hBadge.classList.remove('active');
+                    hIcon.setAttribute('fill', 'none');
+                    hIcon.setAttribute('stroke', 'currentColor');
+                    hText.innerText = 'Save';
+                }
             }
-        })
-        .catch(err => console.error('Favorite toggle failed:', err));
+        });
     }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        evaluateProfileHeaderDistance();
-    });
 </script>
 {% endblock %}
