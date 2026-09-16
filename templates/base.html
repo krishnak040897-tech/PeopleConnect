@@ -527,8 +527,10 @@
                             dropdown.innerHTML = '<div class="live-search-empty">No matching specialists found</div>';
                         } else {
                             dropdown.innerHTML = results.slice(0, 6).map(function(p) {
+                                // UPDATED IMAGE SOURCE LOGIC FOR SEARCH
+                                var imgSrc = p.profile_image && p.profile_image.startsWith('http') ? p.profile_image : '/uploads/' + (p.profile_image || '');
                                 var avatar = p.profile_image
-                                    ? '<img src="/uploads/' + p.profile_image + '" alt="">'
+                                    ? '<img src="' + imgSrc + '" alt="">'
                                     : '<div class="avatar-placeholder" style="width:100%;height:100%;font-size:0.9rem;border-radius:0;">' + (p.owner_name ? p.owner_name[0].toUpperCase() : 'P') + '</div>';
                                 return '<a href="/provider/' + p.id + '" class="live-search-item">' +
                                     '<div class="lsi-avatar">' + avatar + '</div>' +
