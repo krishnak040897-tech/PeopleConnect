@@ -1,0 +1,1057 @@
+{% extends 'base.html' %}
+
+{% block title %}PeopleConnect – Discover Local Services & Experts{% endblock %}
+
+{% block page_style %}
+<style>
+    /* --- Mobile Header Layout Container --- */
+    .app-mobile-header-group {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 4px 4px;
+    }
+    .header-left-stack {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+    .header-right-asset {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .header-right-asset img {
+        height: 68px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    /* --- Mobile Top Bar & Location Strip --- */
+    .app-mobile-top-bar {
+        display: flex;
+        align-items: center;
+        padding: 0 0 4px 0;
+    }
+    .app-mobile-top-bar .logo-container-mobile {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+    .app-mobile-top-bar .logo-img-mobile { 
+        height: 38px; width: auto; object-fit: contain;
+    }
+
+    /* --- Interactive Location Strip --- */
+    .app-live-location-strip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0 6px 0;
+        cursor: pointer;
+        position: relative;
+        user-select: none;
+        transition: opacity 0.2s ease;
+    }
+    .app-live-location-strip:active { opacity: 0.7; }
+    
+    .app-live-location-strip svg.location-pin-icon {
+        color: var(--primary); width: 20px; height: 20px; 
+        fill: none; stroke: currentColor; stroke-width: 2.5; flex-shrink: 0;
+        animation: pinBounce 2s ease infinite;
+    }
+    @keyframes pinBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+    }
+
+    .location-text-container {
+        display: flex; flex-direction: column; line-height: 1.2; min-width: 0; flex: 1;
+    }
+    .location-headline-row {
+        display: flex; align-items: center; gap: 4px;
+    }
+    .location-headline-row .current-tag {
+        font-size: 0.92rem; font-weight: 900; color: var(--text); letter-spacing: -0.02em;
+    }
+    .location-headline-row svg.dropdown-arrow {
+        width: 12px; height: 12px; stroke: var(--primary); stroke-width: 3; fill: none;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .location-subtext-detail {
+        font-size: 0.78rem; font-weight: 500; color: var(--text-secondary);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* --- Search Form --- */
+    .app-main-search-form {
+        display: flex; align-items: center; background: #FFFFFF;
+        border: 1.5px solid var(--border); border-radius: var(--radius-full);
+        padding: 3px 16px; margin-bottom: 14px; box-shadow: var(--shadow-premium);
+        transition: border-color 0.15s ease;
+    }
+    .app-main-search-form:focus-within { border-color: var(--primary); }
+    .app-main-search-form svg { color: var(--text-secondary); margin-right: 6px; flex-shrink: 0; }
+    .app-main-search-form input {
+        width: 100%; padding: 11px 6px; font-size: 0.98rem; font-weight: 500; color: var(--text);
+    }
+
+    /* --- Promo Carousel --- */
+    .promo-hero-section {
+        position: relative; margin-bottom: 14px; overflow: hidden;
+        border-radius: var(--radius-lg); box-shadow: var(--shadow-premium);
+    }
+    .promo-carousel-wrapper { display: flex; transition: transform 0.5s var(--transition); width: 100%; }
+    .promo-slide-card {
+        min-width: 100%; max-width: 100%; position: relative;
+        background: var(--primary-gradient); color: #FFFFFF; padding: 24px 20px;
+        display: flex; flex-direction: column; justify-content: center; min-height: 150px; overflow: hidden;
+    }
+    .promo-slide-card::before {
+        content: ''; position: absolute; top: -30%; right: -12%; width: 220px; height: 220px;
+        background: rgba(255, 255, 255, 0.08); border-radius: 50%;
+    }
+    .promo-tag {
+        align-self: flex-start; background: rgba(255, 255, 255, 0.22); backdrop-filter: blur(4px);
+        font-size: 0.72rem; font-weight: 800; text-transform: uppercase; padding: 3px 9px;
+        border-radius: var(--radius-sm); margin-bottom: 8px; letter-spacing: 0.06em;
+    }
+    .promo-title {
+        font-family: var(--font-display); font-size: 1.55rem; font-weight: 900;
+        line-height: 1.15; margin-bottom: 4px; color: #FFFFFF; letter-spacing: -0.02em; max-width: 80%;
+    }
+    .promo-subtitle { font-size: 0.9rem; opacity: 0.92; font-weight: 500; max-width: 78%; }
+    .promo-dots-indicator {
+        position: absolute; bottom: 12px; left: 20px; display: flex; gap: 6px; z-index: 5;
+    }
+    .carousel-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.4);
+        cursor: pointer; transition: all 0.3s ease;
+    }
+    .carousel-dot.active { background: #FFFFFF; width: 18px; border-radius: var(--radius-full); }
+
+    /* --- Trust Metrics --- */
+    .trust-metrics-strip {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px;
+    }
+    .metric-badge-card {
+        background: #FFFFFF; border: 1px solid var(--border-light); border-radius: var(--radius-md);
+        padding: 10px 6px; display: flex; flex-direction: column; align-items: center;
+        text-align: center; box-shadow: var(--shadow-premium);
+    }
+    .metric-badge-card .icon-box {
+        width: 30px; height: 30px; border-radius: 50%; background: var(--primary-light);
+        color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 5px;
+    }
+    .metric-badge-card .icon-box svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+    .metric-badge-card span { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); }
+
+    /* --- Sections & Categories --- */
+    .section-headline-row {
+        display: flex; align-items: baseline; justify-content: space-between;
+        margin-bottom: 12px; padding: 0 2px;
+    }
+    .section-headline-row h3 { font-size: 1.2rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; line-height: 1.2; }
+    .section-headline-row .section-sub {
+        display: block; font-family: var(--font); font-size: 0.78rem; font-weight: 500;
+        color: var(--text-muted); margin-top: 2px;
+    }
+    .section-headline-row .view-all-link { font-size: 0.84rem; font-weight: 800; color: var(--primary); white-space: nowrap; }
+
+    .app-categories-matrix {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 8px; margin-bottom: 24px;
+    }
+    .category-matrix-item {
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        cursor: pointer; text-decoration: none;
+    }
+    .category-matrix-item .icon-circle-wrapper {
+        width: 100%; box-shadow: var(--shadow-premium); border: 1px solid var(--border-light);
+        background: #FFFFFF; border-radius: 20px; overflow: hidden;
+        transition: transform 0.2s var(--transition); display: flex; align-items: center;
+        justify-content: center; padding: 14%; aspect-ratio: 1 / 1;
+    }
+    .category-matrix-item .icon-circle-wrapper img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+    .category-matrix-item .label-text { font-size: 0.8rem; font-weight: 700; color: var(--text); text-align: center; line-height: 1.2; }
+
+    /* --- Featured Scroller --- */
+    .featured-scroller-fluid {
+        display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none;
+        padding: 2px 4px 12px 4px; margin-bottom: 22px; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+    }
+    .featured-scroller-fluid::-webkit-scrollbar { display: none; }
+    .featured-fluid-card {
+        min-width: 82%; max-width: 82%; background: #FFFFFF; border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg); overflow: hidden; scroll-snap-align: start;
+        display: flex; flex-direction: column; box-shadow: var(--shadow-premium); position: relative;
+    }
+    .featured-fluid-card .card-media-photo {
+        width: 100%; height: 146px; background: var(--border-light); position: relative; overflow: hidden;
+    }
+    .featured-fluid-card .card-media-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .featured-fluid-card .card-media-photo::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(20,19,31,0.55) 100%); pointer-events: none;
+    }
+    .featured-fluid-card .card-fav-btn {
+        position: absolute; top: 10px; right: 10px; z-index: 10; background: rgba(255,255,255,0.94);
+        border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer; border: none;
+    }
+    .featured-fluid-card .card-fav-btn svg { width: 15px; height: 15px; stroke-width: 2.5; }
+    .featured-fluid-card .floating-rating-badge {
+        position: absolute; top: 10px; left: 10px; background: rgba(255, 255, 255, 0.96); padding: 3px 8px;
+        border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 800; color: var(--text);
+        display: flex; align-items: center; gap: 3px; box-shadow: 0 4px 10px rgba(20,19,31,0.1); z-index: 10;
+    }
+    .featured-fluid-card .floating-rating-badge svg { fill: var(--gold); stroke: var(--gold); width: 11px; height: 11px; }
+    .featured-fluid-card .floating-eta-badge {
+        position: absolute; bottom: 10px; left: 10px; z-index: 10; display: inline-flex;
+        align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 0.74rem;
+        font-weight: 500; color: #FFFFFF;
+    }
+    .featured-fluid-card .card-info-pane { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; }
+    .featured-fluid-card .headline-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .featured-fluid-card .headline-row h4 { font-size: 1.02rem; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .featured-fluid-card .headline-row .status-open { font-size: 0.74rem; font-weight: 800; color: var(--green); background: var(--green-bg); padding: 2px 7px; border-radius: var(--radius-sm); flex-shrink: 0; }
+    .featured-fluid-card .subtitle-text { font-size: 0.84rem; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .featured-fluid-card .distance-row { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .featured-fluid-card .distance-row svg { color: var(--text-muted); width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+
+    /* --- Nearby Vertical Stack --- */
+    .nearby-vertical-stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .nearby-split-card {
+        background: #FFFFFF; border: 1px solid var(--border-light); border-radius: var(--radius-lg);
+        padding: 12px; display: flex; gap: 12px; align-items: stretch; box-shadow: var(--shadow-premium);
+        text-decoration: none; color: inherit; transition: transform 0.2s var(--transition);
+    }
+    
+    .nearby-split-card .thumbnail-box {
+        width: 92px; height: auto; min-height: 92px; border-radius: var(--radius-md); 
+        background: var(--border-light); overflow: hidden; flex-shrink: 0; position: relative;
+    }
+    .nearby-split-card .thumbnail-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    
+    .nearby-split-card .info-details-box { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 3px; }
+    .nearby-split-card .meta-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .nearby-split-card .meta-header h4 { font-size: 0.98rem; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nearby-split-card .meta-header .inline-rating {
+        font-size: 0.76rem; font-weight: 800; color: #B8860B; background: var(--gold-bg);
+        padding: 2px 6px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+    }
+    .nearby-split-card .meta-header .inline-rating svg { fill: var(--gold); stroke: var(--gold); width: 10px; height: 10px; }
+    .nearby-split-card .specialty-subtext { font-size: 0.82rem; color: var(--text-secondary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nearby-split-card .eta-row { margin: 1px 0 6px; }
+    .nearby-split-card .split-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    
+    .nearby-split-card .split-action-row .btn { 
+        padding: 8px 12px; font-size: 0.82rem; font-weight: 700; border-radius: var(--radius-md); 
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none;
+    }
+    .nearby-split-card .split-action-row .btn-call { background: var(--primary-gradient); color: #FFFFFF; box-shadow: none; border: none; }
+    .nearby-split-card .split-action-row .btn-path { background: #FFFFFF; color: var(--text); border: 1px solid var(--border); }
+    .nearby-split-card .split-action-row .btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; flex-shrink: 0; }
+
+    .premium-illustration-wrap {
+        padding: 40px 24px; text-align: center; background: #FFFFFF;
+        border: 1px dashed var(--border); border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-premium); grid-column: 1 / -1;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .premium-illustration-wrap .vector-container { width: 140px; height: 140px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; }
+    .premium-illustration-wrap h4 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; margin-bottom: 4px; color: var(--text); }
+    .premium-illustration-wrap p { font-size: 0.88rem; color: var(--text-secondary); max-width: 340px; margin: 0 auto; line-height: 1.45; }
+
+    /* --- PREMIUM BLINKIT SIDE SHEET OVERLAY --- */
+    .location-overlay-backdrop {
+        position: fixed; inset: 0; background: rgba(20, 19, 31, 0.6);
+        backdrop-filter: blur(8px); z-index: 9999; opacity: 0; visibility: hidden;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .location-overlay-backdrop.active { opacity: 1; visibility: visible; }
+
+    .location-selector-sheet {
+        position: absolute; bottom: 0; left: 0; right: 0;
+        background: #FFFFFF; border-radius: 28px 28px 0 0;
+        padding: 0; max-height: 85vh; overflow-y: auto;
+        transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 -12px 60px rgba(20, 19, 31, 0.18);
+        display: flex; flex-direction: column;
+    }
+    .location-overlay-backdrop.active .location-selector-sheet { transform: translateY(0); }
+
+    .sheet-header {
+        padding: 24px 24px 12px; position: sticky; top: 0; background: #FFFFFF; z-index: 10;
+        border-bottom: 1px solid var(--border-light);
+    }
+    .sheet-drag-handle {
+        width: 44px; height: 5px; background: var(--border); border-radius: var(--radius-full);
+        margin: 0 auto 18px;
+    }
+    .sheet-title { font-size: 1.35rem; font-weight: 800; margin-bottom: 14px; color: var(--text); letter-spacing: -0.02em; }
+
+    .detect-location-action {
+        display: flex; align-items: center; justify-content: space-between;
+        background: var(--primary-light); border: 1px solid rgba(255, 75, 62, 0.08);
+        padding: 16px; border-radius: var(--radius-md); margin-bottom: 18px;
+        cursor: pointer; transition: all 0.2s ease;
+    }
+    .detect-location-action:active { transform: scale(0.98); background: #FFE0DB; }
+    .detect-left { display: flex; align-items: center; gap: 14px; }
+    .detect-icon-box {
+        width: 40px; height: 40px; background: #FFFFFF; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: var(--primary);
+        box-shadow: 0 4px 12px var(--primary-glow);
+    }
+    .detect-text h5 { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0; }
+    .detect-text p { font-size: 0.78rem; color: var(--text-secondary); margin: 3px 0 0; font-weight: 500; }
+    .detect-location-action .pulse-satellite { animation: satelliteRadar 1.5s infinite ease-in-out; }
+    @keyframes satelliteRadar {
+        0% { opacity: 0.4; transform: scale(0.95); }
+        50% { opacity: 1; transform: scale(1.05); }
+        100% { opacity: 0.4; transform: scale(0.95); }
+    }
+
+    .search-locations-input-wrapper {
+        position: relative; margin-bottom: 6px;
+    }
+    .search-locations-input-wrapper svg.search-magnifier {
+        position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+        color: var(--text-muted); width: 20px; height: 20px; stroke-width: 2.5;
+    }
+    .search-locations-input {
+        width: 100%; padding: 14px 16px 14px 48px; background: var(--bg);
+        border: 1.5px solid var(--border); border-radius: var(--radius-md);
+        font-size: 1rem; font-weight: 500; color: var(--text); transition: all 0.15s ease;
+    }
+    .search-locations-input:focus { border-color: var(--primary); background: #FFFFFF; box-shadow: 0 0 0 4px var(--primary-glow); }
+
+    .saved-locations-list { padding: 16px 24px 32px; display: flex; flex-direction: column; gap: 18px; }
+    .location-group-segment { display: flex; flex-direction: column; gap: 2px; }
+    .location-group-title {
+        font-size: 0.78rem; font-weight: 800; text-transform: uppercase;
+        color: var(--text-muted); letter-spacing: 0.06em; margin-bottom: 6px; padding-left: 2px;
+    }
+    .location-option-item {
+        display: flex; align-items: flex-start; gap: 14px; padding: 14px 6px;
+        border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background-color 0.15s ease;
+        border-radius: var(--radius-sm);
+    }
+    .location-option-item:hover { background-color: var(--border-light); }
+    .location-option-item:last-child { border-bottom: none; }
+    
+    .location-radio-pin {
+        width: 36px; height: 36px; border-radius: 50%; background: var(--border-light);
+        display: flex; align-items: center; justify-content: center; color: var(--text-secondary); flex-shrink: 0;
+    }
+    .location-option-item:hover .location-radio-pin { background: var(--primary-light); color: var(--primary); }
+    .location-radio-pin svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+
+    .loc-info { flex: 1; min-width: 0; }
+    .loc-info h5 { font-size: 1rem; font-weight: 700; color: var(--text); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .loc-info p { font-size: 0.82rem; color: var(--text-secondary); margin: 3px 0 0; line-height: 1.3; }
+
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .app-mobile-header-group, .app-main-search-form { display: none; }
+        .app-categories-matrix { grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 26px; }
+        .promo-hero-section { margin-bottom: 16px; }
+        .promo-slide-card { min-height: 170px; padding: 30px 32px; }
+        .promo-title { font-size: 1.8rem; max-width: 65%; }
+        .promo-subtitle { max-width: 60%; }
+        .trust-metrics-strip { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+        .metric-badge-card { padding: 12px 10px; flex-direction: row; justify-content: center; gap: 10px; text-align: left; }
+        .metric-badge-card .icon-box { margin-bottom: 0; width: 32px; height: 32px; }
+        .metric-badge-card span { font-size: 0.8rem; }
+        .featured-scroller-fluid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+            overflow-x: visible; padding: 0; margin-bottom: 24px;
+        }
+        .featured-fluid-card { min-width: 100%; max-width: 100%; }
+        .featured-fluid-card .card-media-photo { height: 130px; }
+        .nearby-vertical-stack { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 28px; }
+        .nearby-split-card .thumbnail-box { height: 88px; width: 80px; }
+
+        .location-selector-sheet {
+            position: fixed; top: 50%; left: 50%; bottom: auto; right: auto;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 480px; max-height: 600px; border-radius: var(--radius-xl);
+            opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 30px 90px rgba(20, 19, 31, 0.22);
+            z-index: 10000;
+        }
+        .location-overlay-backdrop.active .location-selector-sheet {
+            transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible;
+        }
+        .sheet-drag-handle { display: none; }
+        .sheet-header { padding: 24px 28px 14px; }
+        .saved-locations-list { padding: 20px 28px 36px; }
+    }
+
+    /* ===== DESKTOP RESPONSIVE: 1025px+ ===== */
+    @media (min-width: 1025px) {
+        .app-mobile-header-group, .app-main-search-form { display: none; }
+        .app-categories-matrix { grid-template-columns: repeat(7, 1fr); gap: 16px; margin-bottom: 28px; }
+        .promo-hero-section { margin-bottom: 18px; }
+        .promo-slide-card { min-height: 190px; padding: 36px 40px; }
+        .promo-title { font-size: 2.1rem; max-width: 60%; }
+        .promo-subtitle { max-width: 55%; }
+        .trust-metrics-strip { grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .metric-badge-card { padding: 14px; flex-direction: row; justify-content: center; gap: 12px; text-align: left; }
+        .metric-badge-card .icon-box { margin-bottom: 0; }
+        .metric-badge-card span { font-size: 0.9rem; }
+        .featured-scroller-fluid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+            overflow-x: visible; padding: 0; margin-bottom: 26px;
+        }
+        .featured-fluid-card { min-width: 100%; max-width: 100%; }
+        .featured-fluid-card .card-media-photo { height: 138px; }
+        .nearby-vertical-stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        .nearby-split-card .thumbnail-box { height: 92px; }
+
+        .location-selector-sheet {
+            position: fixed; top: 50%; left: 50%; bottom: auto; right: auto;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 500px; max-height: 640px; border-radius: var(--radius-xl);
+            opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 30px 90px rgba(20, 19, 31, 0.22);
+            z-index: 10000;
+        }
+        .location-overlay-backdrop.active .location-selector-sheet {
+            transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible;
+        }
+        .sheet-drag-handle { display: none; }
+        .sheet-header { padding: 24px 28px 14px; }
+        .saved-locations-list { padding: 20px 28px 36px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Unified Grid Header Group targeting the Mobile view layout -->
+<div class="app-mobile-header-group">
+    <div class="header-left-stack">
+        <header class="app-mobile-top-bar">
+            <a href="{{ url_for('index') }}" class="logo-container-mobile">
+                <img src="{{ logo_url }}" alt="PeopleConnect Logo" class="logo-img-mobile">
+            </a>
+        </header>
+
+        <div class="app-live-location-strip" onclick="openLocationSelector()">
+            <svg class="location-pin-icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <div class="location-text-container">
+                <div class="location-headline-row">
+                    <span class="current-tag" id="displayLocationTitle">Locating...</span>
+                    <svg class="dropdown-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <span class="location-subtext-detail" id="displayLocationDetail">Syncing with geographic matrix...</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right side illustration column node placement - Updated with new HD image -->
+    <div class="header-right-asset">
+        <img src="https://i.ibb.co/hx1ZkD9n/t171kakz65rmw0czcjmrjhd4bm-result-0.jpg" 
+             alt="Header Vector Illustration" 
+             style="height: 68px; width: auto; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; -ms-interpolation-mode: bicubic;">
+    </div>
+</div>
+
+<div class="app-main-search-form" id="mobile-search-wrapper">
+    <form action="{{ url_for('providers') }}" method="GET" style="display:flex;align-items:center;flex:1;gap:6px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="search" placeholder="What service do you require today?" autocomplete="off">
+    </form>
+</div>
+
+<section class="promo-hero-section">
+    <div class="promo-carousel-wrapper" id="promoCarousel">
+        <div class="promo-slide-card" style="background: linear-gradient(135deg, #FF4B3E 0%, #C81E4E 100%);">
+            <span class="promo-tag">Monsoon Offer</span>
+            <h2 class="promo-title">Home Deep Cleaning</h2>
+            <p class="promo-subtitle">Get flat 25% OFF on premium expert packages this week.</p>
+        </div>
+        <div class="promo-slide-card" style="background: linear-gradient(135deg, #14131F 0%, #3A3750 100%);">
+            <span class="promo-tag">Verified Care</span>
+            <h2 class="promo-title">Top Rated Electricians</h2>
+            <p class="promo-subtitle">No visiting fees. Fully certified technicians at your doorstep.</p>
+        </div>
+        <div class="promo-slide-card" style="background: linear-gradient(135deg, #B8860B 0%, #FFB100 100%);">
+            <span class="promo-tag">Instant Match</span>
+            <h2 class="promo-title">Plumbing Emergencies?</h2>
+            <p class="promo-subtitle">Verified professionals reach your destination within 45 minutes.</p>
+        </div>
+    </div>
+    <div class="promo-dots-indicator" id="promoDots">
+        <div class="carousel-dot active" onclick="jumpToSlide(0)"></div>
+        <div class="carousel-dot" onclick="jumpToSlide(1)"></div>
+        <div class="carousel-dot" onclick="jumpToSlide(2)"></div>
+    </div>
+</section>
+
+<section class="trust-metrics-strip">
+    <div class="metric-badge-card">
+        <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <span>100% Verified</span>
+    </div>
+    <div class="metric-badge-card">
+        <div class="icon-box"><svg viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+        <span>No Hidden Fees</span>
+    </div>
+    <div class="metric-badge-card">
+        <div class="icon-box"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <span>Fast Booking</span>
+    </div>
+</section>
+
+<div class="section-headline-row">
+    <h3>Categories</h3>
+    <a href="{{ url_for('providers') }}" class="view-all-link">View All</a>
+</div>
+
+<div class="app-categories-matrix">
+    <a href="{{ url_for('providers', category='Plumber') }}" class="category-matrix-item">
+        <div class="icon-circle-wrapper"><img src="https://i.ibb.co/390bPLd0/category-5.png" alt="Plumber"></div>
+        <span class="label-text">Plumber</span>
+    </a>
+    <a href="{{ url_for('providers', category='Electrician') }}" class="category-matrix-item">
+        <div class="icon-circle-wrapper"><img src="https://i.ibb.co/9kz8CM04/category-6.png" alt="Electrician"></div>
+        <span class="label-text">Electric</span>
+    </a>
+    <a href="{{ url_for('providers', category='Grocery Store') }}" class="category-matrix-item">
+        <div class="icon-circle-wrapper"><img src="https://i.ibb.co/PZGG28Fh/category-17.png" alt="Grocery Store"></div>
+        <span class="label-text">Grocery</span>
+    </a>
+    <a href="{{ url_for('providers', category='Restaurant') }}" class="category-matrix-item">
+        <div class="icon-circle-wrapper"><img src="https://i.ibb.co/k6JmRqYZ/image-7.png" alt="Restaurant"></div>
+        <span class="label-text">Dining</span>
+    </a>
+    <a href="{{ url_for('providers', category='Pharmacy') }}" class="category-matrix-item">
+        <div class="icon-circle-wrapper"><img src="https://i.ibb.co/YTKnYB2h/category-3.png" alt="Pharmacy"></div>
+        <span class="label-text">Pharmacy</span>
+    </a>
+    <a href="{{ url_for('providers', category='Doctor') }}" class="category-matrix-item">
+        <div class="icon-circle-wrapper"><img src="https://i.ibb.co/21ZSs4KW/category-1.png" alt="Doctor"></div>
+        <span class="label-text">Doctor</span>
+    </a>
+    <a href="{{ url_for('providers', category='Beautician') }}" class="category-matrix-item">
+        <div class="icon-circle-wrapper"><img src="https://i.ibb.co/W4mLWG6n/image-2.png" alt="Beautician"></div>
+        <span class="label-text">Salon</span>
+    </a>
+</div>
+
+<div class="section-headline-row">
+    <div>
+        <h3>Featured Businesses</h3>
+        <span class="section-sub">Handpicked, trusted by your neighbors</span>
+    </div>
+</div>
+
+<div class="featured-scroller-fluid" id="featuredGridParentWrapper">
+    {% if providers %}
+        {% for p in providers[:3] %}
+            <a href="{{ url_for('provider_details', provider_id=p.id) }}" class="featured-fluid-card target-distance-card" data-address="{{ p.address or '' }} {{ p.area or '' }} {{ p.city or '' }}">
+                <div class="card-media-photo">
+                    {% if p.profile_image %}
+                        <img src="/uploads/{{ p.profile_image }}" alt="{{ p.business_name }}">
+                    {% else %}
+                        <div class="avatar-placeholder" style="width:100%; height:100%; font-size:2.5rem; border-radius:0;">
+                            {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
+                        </div>
+                    {% endif %}
+                    {% if session.get('user_id') %}
+                    <button class="card-fav-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(this, {{ p.id }})" title="Add to favorites">
+                        <svg class="heart-icon" viewBox="0 0 24 24" fill="{% if p.id in favorite_ids %}var(--red){% else %}none{% endif %}" stroke="{% if p.id in favorite_ids %}var(--red){% else %}currentColor{% endif %}"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </button>
+                    {% endif %}
+                    <div class="floating-rating-badge">
+                        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>{% if p.avg_rating > 0 %}{{ '%.1f'|format(p.avg_rating) }}{% else %}New{% endif %}</span>
+                    </div>
+                    <div class="floating-eta-badge">
+                        <span class="computed-distance-display">Calculating distance...</span>
+                    </div>
+                </div>
+                <div class="card-info-pane">
+                    <div class="headline-row">
+                        <h4>{{ p.business_name }}</h4>
+                        <span class="status-open">Open</span>
+                    </div>
+                    <p class="subtitle-text">{{ p.category }} & Essentials</p>
+                    <div class="distance-row">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <span>{{ p.area }}</span>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    {% else %}
+        <div class="premium-illustration-wrap">
+            <div class="vector-container">
+                <svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="75" fill="var(--primary-light)" opacity="0.6"/>
+                    <path d="M100 45 l11 25 h26 l-21 17 l8 26 l-24-16 l-24 16 l8-26 l-21-17 h26 z" fill="#FFF6E0" stroke="var(--gold)" stroke-width="3" stroke-linejoin="round"/>
+                    <rect x="75" y="115" width="50" height="30" rx="6" fill="#FFFFFF" stroke="var(--border)" stroke-width="2"/>
+                    <line x1="85" y1="126" width="30" stroke="#9C98A6" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="85" y1="134" width="20" stroke="#EDE7E1" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="125" cy="135" r="14" fill="var(--green)"/>
+                    <path d="M119 135 l4 4 l8-8" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h4>No Featured Businesses Found</h4>
+            <p>We are currently updating our list of handpicked local specialists.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="section-headline-row">
+    <div>
+        <h3>Nearby Services</h3>
+        <span class="section-sub">Closest specialists to your current area</span>
+    </div>
+</div>
+
+<div class="nearby-vertical-stack" id="nearbyVerticalStackParentWrapper">
+    {% if providers %}
+        {% for p in providers %}
+            <a href="{{ url_for('provider_details', provider_id=p.id) }}" class="nearby-split-card target-distance-card" data-address="{{ p.address or '' }} {{ p.area or '' }} {{ p.city or '' }}">
+                <div class="thumbnail-box">
+                    {% if p.profile_image %}
+                        <img src="/uploads/{{ p.profile_image }}" alt="{{ p.business_name }}">
+                    {% else %}
+                        <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.5rem; border-radius:0;">
+                            {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="info-details-box">
+                    <div class="meta-header">
+                        <h4>{{ p.business_name }}</h4>
+                        <div class="inline-rating" onclick="event.preventDefault();">
+                            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            <span>{% if p.avg_rating > 0 %}{{ '%.1f'|format(p.avg_rating) }}{% else %}New{% endif %}</span>
+                        </div>
+                    </div>
+                    <p class="specialty-subtext">{{ p.category }} specialty setup and repairs</p>
+                    <div class="eta-row">
+                        <span class="eta-chip"><span class="computed-distance-display">Calculating distance...</span></span>
+                    </div>
+                    <div class="split-action-row">
+                        <object>
+                            <a href="tel:{{ p.phone }}" class="btn btn-call btn-sm" onclick="event.stopPropagation();">
+                                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                Call
+                            </a>
+                        </object>
+                        <object>
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ (p.business_name + ' ' + p.area + ' ' + p.city)|urlencode }}" class="btn btn-path btn-sm" target="_blank" rel="noopener" onclick="event.stopPropagation();">
+                                <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                                Directions
+                            </a>
+                        </object>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    {% else %}
+        <div class="premium-illustration-wrap">
+            <div class="vector-container">
+                <svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                    <circle cx="100" cy="100" r="55" fill="none" stroke="#EDE7E1" stroke-width="2"/>
+                    <g transform="translate(100,95) scale(1.3)">
+                        <path d="M0-18 C-12-18 -12-6 0 10 C12-6 12-18 0-18 z" fill="var(--primary)"/>
+                        <circle cx="0" cy="-10" r="4" fill="#FFFFFF"/>
+                    </g>
+                </svg>
+            </div>
+            <h4>No Services Nearby</h4>
+            <p>There are no active professionals in your immediate area right now.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- PREMIUM BLINKIT SIDE SHEET OVERLAY CONTAINER -->
+<div class="location-overlay-backdrop" id="locationOverlay" onclick="closeLocationSelector(event)">
+    <div class="location-selector-sheet">
+        <div class="sheet-header">
+            <div class="sheet-drag-handle"></div>
+            <h4 class="sheet-title">Select address</h4>
+            
+            <div class="detect-location-action" onclick="executeLiveLocationDetection()">
+                <div class="detect-left">
+                    <div class="detect-icon-box" id="satelliteAnimationRadarIcon">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                    </div>
+                    <div class="detect-text">
+                        <h5 id="detectTitleText">Detect Current Location</h5>
+                        <p id="detectStatusText">Using real-time browser GPS mapping</p>
+                    </div>
+                </div>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+
+            <div class="search-locations-input-wrapper">
+                <svg class="search-magnifier" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="search-locations-input" id="locationSearchInput" placeholder="Type city or street neighborhood..." oninput="handleLocationTyping(this)">
+            </div>
+        </div>
+
+        <div class="saved-locations-list">
+            <div class="location-group-segment" id="localitiesSubSegmentWrapper" style="display: none;">
+                <div class="location-group-title">Nearby Localities</div>
+                <div id="localityContainerTarget"></div>
+            </div>
+
+            <div class="location-group-segment" id="landmarksSubSegmentWrapper" style="display: none;">
+                <div class="location-group-title">Notable Landmarks</div>
+                <div id="landmarkContainerTarget"></div>
+            </div>
+
+            <div id="emptyResultsIllustrationBox">
+                <div class="premium-illustration-wrap" style="padding: 30px 10px; box-shadow: none; background: transparent; border: none;">
+                    <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.4;">Allow location mapping permissions or enter your custom city query above to auto-extract residential neighborhoods.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_script %}
+<script>
+    const GEOAPIFY_API_KEY = "3f4cf2a1585b4efa9e9bc4a430535d9c";
+    let typingDebounceTimer = null;
+    let currentUserLat = null;
+    let currentUserLon = null;
+
+    // --- Carousel Animations ---
+    var currentSlideIndex = 0;
+    var totalSlidesCount = 3;
+    var sliderIntervalTimer = setInterval(autoSlideTask, 5000);
+
+    function updateCarouselLayout() {
+        var wrapper = document.getElementById('promoCarousel');
+        if (wrapper) wrapper.style.transform = 'translateX(-' + (currentSlideIndex * 100) + '%)';
+        var dots = document.querySelectorAll('#promoDots .carousel-dot');
+        dots.forEach(function(dot, idx) {
+            dot.classList.toggle('active', idx === currentSlideIndex);
+        });
+    }
+
+    function autoSlideTask() {
+        currentSlideIndex = (currentSlideIndex + 1) % totalSlidesCount;
+        updateCarouselLayout();
+    }
+
+    function jumpToSlide(index) {
+        clearInterval(sliderIntervalTimer);
+        currentSlideIndex = index;
+        updateCarouselLayout();
+        sliderIntervalTimer = setInterval(autoSlideTask, 5000);
+    }
+
+    // --- Bottom Sheet Navigation Triggers ---
+    function openLocationSelector() {
+        var overlay = document.getElementById('locationOverlay');
+        if (overlay) overlay.classList.add('active');
+    }
+
+    function closeLocationSelector(e) {
+        if (e && e.target !== document.getElementById('locationOverlay')) return;
+        var overlay = document.getElementById('locationOverlay');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    function selectPresetLocation(title, detail, targetLat = null, targetLon = null) {
+        var mobileTitle = document.getElementById('displayLocationTitle');
+        var mobileDetail = document.getElementById('displayLocationDetail');
+        if (mobileTitle) mobileTitle.innerText = title;
+        if (mobileDetail) mobileDetail.innerText = detail;
+        
+        var desktopTitle = document.getElementById('desktopDisplayLocationTitle');
+        if (desktopTitle) desktopTitle.innerText = title;
+        
+        localStorage.setItem('user_selected_loc_title', title);
+        localStorage.setItem('user_selected_loc_detail', detail);
+        
+        if (targetLat && targetLon) {
+            currentUserLat = parseFloat(targetLat);
+            currentUserLon = parseFloat(targetLon);
+            localStorage.setItem('user_selected_loc_lat', targetLat);
+            localStorage.setItem('user_selected_loc_lon', targetLon);
+            recalculateAndSortAllListingDistances();
+        }
+        
+        var overlay = document.getElementById('locationOverlay');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    // --- Haversine Distance Calculator ---
+    function calculateHaversineDistanceInKm(lat1, lon1, lat2, lon2) {
+        const earthRadiusKm = 6371;
+        const deltaLatRad = (lat2 - lat1) * Math.PI / 180;
+        const deltaLonRad = (lon2 - lon1) * Math.PI / 180;
+        
+        const a = Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(deltaLonRad / 2) * Math.sin(deltaLonRad / 2);
+                  
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusKm * c;
+    }
+
+    // --- Geocode, Calculate Distance and Auto Sort Cards ---
+    async function recalculateAndSortAllListingDistances() {
+        if (!currentUserLat || !currentUserLon) return;
+
+        const cards = Array.from(document.querySelectorAll('.target-distance-card'));
+        const processingPromises = cards.map(async (card) => {
+            const rawAddressString = card.getAttribute('data-address');
+            const displayField = card.querySelector('.computed-distance-display');
+            if (!rawAddressString || !displayField) return { card, distance: Infinity };
+
+            try {
+                const parseUrl = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(rawAddressString)}&limit=1&apiKey=${GEOAPIFY_API_KEY}`;
+                const res = await fetch(parseUrl);
+                const payload = await res.json();
+
+                if (payload.features && payload.features.length > 0) {
+                    const bizLat = payload.features[0].properties.lat;
+                    const bizLon = payload.features[0].properties.lon;
+                    const computedDistance = calculateHaversineDistanceInKm(currentUserLat, currentUserLon, bizLat, bizLon);
+                    
+                    displayField.innerText = `${computedDistance.toFixed(1)} km away`;
+                    card.setAttribute('data-computed-km', computedDistance);
+                    return { card, distance: computedDistance };
+                } else {
+                    displayField.innerText = "Nearby area";
+                    card.setAttribute('data-computed-km', 999);
+                    return { card, distance: 999 };
+                }
+            } catch (err) {
+                displayField.innerText = "Nearby area";
+                card.setAttribute('data-computed-km', 999);
+                return { card, distance: 999 };
+            }
+        });
+
+        const resolutionList = await Promise.all(processingPromises);
+
+        // Sort DOM Elements by exact distance parameters
+        const sortContainerElements = (parentSelector, cardClassName) => {
+            const parentNode = document.getElementById(parentSelector);
+            if (!parentNode) return;
+            
+            const matchedCards = resolutionList.filter(item => item.card.classList.contains(cardClassName));
+            matchedCards.sort((a, b) => a.distance - b.distance);
+            
+            matchedCards.forEach(item => {
+                parentNode.appendChild(item.card);
+            });
+        };
+
+        sortContainerElements('featuredGridParentWrapper', 'featured-fluid-card');
+        sortContainerElements('nearbyVerticalStackParentWrapper', 'nearby-split-card');
+    }
+
+    // --- Real-time debounced text input ---
+    function handleLocationTyping(inputElement) {
+        clearTimeout(typingDebounceTimer);
+        const inputString = inputElement.value.trim();
+        
+        if (inputString.length < 3) return;
+        
+        typingDebounceTimer = setTimeout(() => {
+            executeTextCityGeocodeSearch(inputString);
+        }, 400);
+    }
+
+    // --- Process and distribute locations categorically ---
+    async function fetchNearbyTownsAndSights(lat, lon) {
+        const localityTarget = document.getElementById('localityContainerTarget');
+        const landmarkTarget = document.getElementById('landmarkContainerTarget');
+        const segmentLocality = document.getElementById('localitiesSubSegmentWrapper');
+        const segmentLandmark = document.getElementById('landmarksSubSegmentWrapper');
+        const illustrationBox = document.getElementById('emptyResultsIllustrationBox');
+
+        illustrationBox.innerHTML = `<p style="font-size:0.9rem; color:var(--text-muted); padding:20px 0; text-align:center;">Extracting structural areas...</p>`;
+        segmentLocality.style.display = "none";
+        segmentLandmark.style.display = "none";
+
+        const apiRequestEndpoint = `https://api.geoapify.com/v2/places?categories=populated_place.neighbourhood,populated_place.suburb,populated_place.city,populated_place.town,tourism.sights,building.tourism&filter=circle:${lon},${lat},15000&bias=proximity:${lon},${lat}&limit=16&apiKey=${GEOAPIFY_API_KEY}`;
+        
+        try {
+            const response = await fetch(apiRequestEndpoint);
+            const data = await response.json();
+            
+            if (!data.features || data.features.length === 0) {
+                illustrationBox.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:15px 0; text-align:center;">No component zones discovered inside this map grid sector.</p>`;
+                return;
+            }
+
+            let localAreasHtml = "";
+            let landmarkSightsHtml = "";
+            let localCount = 0;
+            let landmarkCount = 0;
+
+            data.features.forEach(feat => {
+                const props = feat.properties;
+                const placeName = props.name || props.address_line1 || "Specified Zone";
+                const placeDetail = props.address_line2 || props.formatted || "Telangana, India";
+                const isLandmark = props.categories && (props.categories.includes('tourism') || props.categories.includes('building'));
+
+                const compositeCardHtml = `
+                    <div class="location-option-item" onclick="selectPresetLocation('${placeName.replace(/'/g, "\\'")}', '${placeDetail.replace(/'/g, "\\'")}', '${props.lat}', '${props.lon}')">
+                        <div class="location-radio-pin">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        </div>
+                        <div class="loc-info">
+                            <h5>${placeName}</h5>
+                            <p>${placeDetail}</p>
+                        </div>
+                    </div>
+                `;
+
+                if (isLandmark) {
+                    landmarkSightsHtml += compositeCardHtml;
+                    landmarkCount++;
+                } else {
+                    localAreasHtml += compositeCardHtml;
+                    localCount++;
+                }
+            });
+
+            illustrationBox.innerHTML = "";
+            
+            if (localCount > 0) {
+                localityTarget.innerHTML = localAreasHtml;
+                segmentLocality.style.display = "flex";
+            }
+            if (landmarkCount > 0) {
+                landmarkTarget.innerHTML = landmarkSightsHtml;
+                segmentLandmark.style.display = "flex";
+            }
+        } catch (err) {
+            console.error(err);
+            illustrationBox.innerHTML = `<p style="font-size:0.85rem; color:var(--red); padding:15px 0; text-align:center;">Directory streaming interrupted.</p>`;
+        }
+    }
+
+    // --- Reverse Geocoding Map Tracker ---
+    function executeLiveLocationDetection() {
+        var statusText = document.getElementById('detectStatusText');
+        var titleText = document.getElementById('detectTitleText');
+        var radarIcon = document.getElementById('satelliteAnimationRadarIcon');
+        
+        if (statusText) statusText.innerText = "Syncing satellite telemetry lines...";
+        if (titleText) titleText.innerText = "Locking GPS Coordinates...";
+        if (radarIcon) radarIcon.classList.add('pulse-satellite');
+
+        if (!navigator.geolocation) {
+            if (statusText) statusText.innerText = "Tracking module missing on system browser.";
+            if (radarIcon) radarIcon.classList.remove('pulse-satellite');
+            executeGracefulDefaultFallback();
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(async function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const reverseGeocodeUrl = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=${GEOAPIFY_API_KEY}`;
+
+            try {
+                const response = await fetch(reverseGeocodeUrl);
+                const data = await response.json();
+                
+                if (data.features && data.features.length > 0) {
+                    const properties = data.features[0].properties;
+                    const cleanLocalityName = properties.suburb || properties.neighbourhood || properties.city || "Live GPS Location";
+                    const fullyFormattedAddress = properties.formatted || "Coordinates Verified";
+                    
+                    if (statusText) statusText.innerText = "Mapping grid verified!";
+                    if (titleText) titleText.innerText = "Detect Current Location";
+                    if (radarIcon) radarIcon.classList.remove('pulse-satellite');
+                    
+                    selectPresetLocation(cleanLocalityName, fullyFormattedAddress, lat, lon);
+                    fetchNearbyTownsAndSights(lat, lon);
+                } else {
+                    executeGracefulDefaultFallback();
+                }
+            } catch (error) {
+                console.error(error);
+                executeGracefulDefaultFallback();
+            }
+        }, function(error) {
+            executeGracefulDefaultFallback();
+        }, { enableHighAccuracy: true, timeout: 9000 });
+    }
+
+    // --- Forward Boundary Query parsing ---
+    async function executeTextCityGeocodeSearch(queryText) {
+        const statusText = document.getElementById('detectStatusText');
+        if (statusText) statusText.innerText = "Resolving textual address matching indexes...";
+
+        const forwardGeocodeUrl = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(queryText)}&limit=1&apiKey=${GEOAPIFY_API_KEY}`;
+
+        try {
+            const response = await fetch(forwardGeocodeUrl);
+            const data = await response.json();
+
+            if (data.features && data.features.length > 0) {
+                const featureProps = data.features[0].properties;
+                const targetLat = featureProps.lat;
+                const targetLon = featureProps.lon;
+                
+                if (statusText) statusText.innerText = "Data nodes structured correctly.";
+                fetchNearbyTownsAndSights(targetLat, targetLon);
+            } else {
+                if (statusText) statusText.innerText = "Zero boundary nodes matched.";
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // --- Fallback handling pipeline ---
+    function executeGracefulDefaultFallback() {
+        var statusText = document.getElementById('detectStatusText');
+        var titleText = document.getElementById('detectTitleText');
+        var radarIcon = document.getElementById('satelliteAnimationRadarIcon');
+        
+        if (statusText) statusText.innerText = "Using default regional index parameters.";
+        if (titleText) titleText.innerText = "Detect Current Location";
+        if (radarIcon) radarIcon.classList.remove('pulse-satellite');
+        
+        selectPresetLocation("Nizamabad", "Subhash Nagar Center, Telangana, India", 18.6725, 78.0941);
+        fetchNearbyTownsAndSights(18.6725, 78.0941);
+    }
+
+    // --- Dynamic DOM State Initializer ---
+    document.addEventListener("DOMContentLoaded", function() {
+        var cachedTitle = localStorage.getItem('user_selected_loc_title');
+        var cachedDetail = localStorage.getItem('user_selected_loc_detail');
+        var cachedLat = localStorage.getItem('user_selected_loc_lat');
+        var cachedLon = localStorage.getItem('user_selected_loc_lon');
+        
+        var desktopTitle = document.getElementById('desktopDisplayLocationTitle');
+        var mobileTitle = document.getElementById('displayLocationTitle');
+        var mobileDetail = document.getElementById('displayLocationDetail');
+        
+        if (cachedTitle && cachedDetail) {
+            if (mobileTitle) mobileTitle.innerText = cachedTitle;
+            if (mobileDetail) mobileDetail.innerText = cachedDetail;
+            if (desktopTitle) desktopTitle.innerText = cachedTitle;
+            if (cachedLat && cachedLon) {
+                currentUserLat = parseFloat(cachedLat);
+                currentUserLon = parseFloat(cachedLon);
+                recalculateAndSortAllListingDistances();
+            }
+        } else {
+            executeLiveLocationDetection();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,567 @@
+{% extends 'base.html' %}
+
+{% block title %}Explore Experts & Services – PeopleConnect{% endblock %}
+
+{% block page_style %}
+<style>
+    /* --- Layout Header Context --- */
+    .providers-view-header {
+        margin-bottom: 20px;
+        padding: 4px 2px;
+    }
+    .providers-view-header h2 { font-size: 1.6rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .providers-view-header p { font-size: 0.9rem; color: var(--text-secondary); margin-top: 2px; font-weight: 500; }
+
+    /* --- Filter Controls Panel Strip --- */
+    .filter-controls-panel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 22px;
+        background: #FFFFFF;
+        padding: 12px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-premium);
+        align-items: center;
+    }
+    .filter-select-element {
+        padding: 10px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text);
+        background: #FFFFFF;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+        min-width: 140px;
+    }
+    .filter-select-element:focus { border-color: var(--primary); }
+
+    /* --- Responsive Grid System --- */
+    .providers-response-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    /* --- Premium Specialist Card --- */
+    .service-provider-card {
+        background: #FFFFFF;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 14px;
+        display: flex;
+        gap: 14px;
+        align-items: stretch;
+        box-shadow: var(--shadow-premium);
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s var(--transition), border-color 0.2s ease;
+        position: relative;
+        min-width: 0;
+    }
+    .service-provider-card:active { transform: scale(0.98); }
+
+    .service-provider-card .card-thumb-frame {
+        width: 100px;
+        height: auto;
+        min-height: 100px;
+        border-radius: var(--radius-md);
+        background: var(--border-light);
+        overflow: hidden;
+        flex-shrink: 0;
+        position: relative;
+    }
+    .service-provider-card .card-thumb-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+    .service-provider-card .card-meta-pane {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 4px;
+    }
+    .service-provider-card .card-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+    }
+    .service-provider-card .card-top-row h4 {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+    }
+    
+    .service-provider-card .card-right-badges {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    
+    .service-provider-card .rating-pill {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #B8860B;
+        background: var(--gold-bg);
+        padding: 2px 7px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    .service-provider-card .rating-pill svg { fill: var(--gold); stroke: var(--gold); width: 10px; height: 10px; }
+
+    .service-provider-card .specialty-text {
+        font-size: 0.86rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .service-provider-card .geo-location-row {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin: 1px 0 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .service-provider-card .geo-location-row svg { color: var(--primary); width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; flex-shrink: 0; }
+
+    .service-provider-card .profile-address-text {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin: 1px 0 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+    }
+
+    .service-provider-card .card-actions-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 4px;
+    }
+    .service-provider-card .card-actions-wrapper .btn {
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border-radius: var(--radius-md);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .service-provider-card .btn-call-action { background: var(--primary-gradient); color: #FFFFFF; border: none; }
+    .service-provider-card .btn-path-action { background: #FFFFFF; color: var(--text); border: 1px solid var(--border); }
+    .service-provider-card .btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; flex-shrink: 0; }
+
+    .service-provider-card .fav-heart-toggle {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(20,19,31,0.08);
+        cursor: pointer;
+        z-index: 50;
+        transition: transform 0.15s ease;
+    }
+    .service-provider-card .fav-heart-toggle:active { transform: scale(0.9); }
+    .service-provider-card .fav-heart-toggle svg { width: 15px; height: 15px; stroke-width: 2.5; display: block; }
+
+    /* --- Pagination Structural Layout --- */
+    .pagination-footer-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .pagination-footer-nav .page-link-node {
+        min-width: 38px; height: 38px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: var(--radius-md); border: 1.5px solid var(--border);
+        font-weight: 700; font-size: 0.92rem; color: var(--text-secondary);
+        transition: all 0.2s ease; background: #FFFFFF;
+    }
+    .pagination-footer-nav .page-link-node:hover { background: var(--border-light); color: var(--text); }
+    .pagination-footer-nav .page-link-node.active { background: var(--primary-gradient); color: #FFFFFF; border-color: transparent; }
+
+    /* --- Empty State / Illustration Styles (From Favorites Reference) --- */
+    .premium-illustration-wrap { 
+        grid-column: 1 / -1; 
+        text-align: center; 
+        padding: 50px 16px; 
+        background: #FFFFFF; 
+        border: 1.5px dashed var(--border); 
+        border-radius: var(--radius-lg); 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; 
+    }
+    .premium-illustration-wrap .vector-container { width: 140px; height: 140px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; }
+    .premium-illustration-wrap svg { width: 100%; height: 100%; }
+    .premium-illustration-wrap h4 { font-size: 1.15rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .premium-illustration-wrap p { font-size: 0.88rem; color: var(--text-secondary); max-width: 320px; margin: 0 auto 20px; line-height: 1.5; }
+
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .providers-response-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .service-provider-card {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 14px;
+        }
+        .service-provider-card .card-thumb-frame {
+            width: 100%;
+            height: 130px;
+            min-height: auto;
+        }
+        .service-provider-card .fav-heart-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+        }
+    }
+
+    /* ===== DESKTOP RESPONSIVE: 1025px+ ===== */
+    @media (min-width: 1025px) {
+        .providers-response-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .service-provider-card {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 16px;
+        }
+        .service-provider-card .card-thumb-frame {
+            width: 100%;
+            height: 145px;
+            min-height: auto;
+        }
+        .service-provider-card .fav-heart-toggle {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 34px;
+            height: 34px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="providers-view-header">
+    <h2>
+        {% if selected_category %}
+            Available {{ selected_category }} Specialists
+        {% elif search_query %}
+            Search Results for "{{ search_query }}"
+        {% else %}
+            All On-Demand Specialists
+        {% endif %}
+    </h2>
+    <p>{{ total }} certified experts found matching your query requirements</p>
+</div>
+
+<!-- Category & Sorting Controls Strip Container -->
+<div class="filter-controls-panel">
+    <select class="filter-select-element" onchange="location = this.value;">
+        <option value="{{ url_for('providers', search=search_query, sort=sort) }}">All Categories</option>
+        {% for cat in categories %}
+            <option value="{{ url_for('providers', category=cat.category_name, search=search_query, sort=sort) }}" {% if selected_category == cat.category_name %}selected{% endif %}>
+                {{ cat.category_name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <select class="filter-select-element" onchange="location = this.value;" style="margin-left: auto;">
+        <option value="{{ url_for('providers', category=selected_category, search=search_query, sort='newest') }}" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
+        <option value="{{ url_for('providers', category=selected_category, search=search_query, sort='views') }}" {% if sort == 'views' %}selected{% endif %}>Most Popular</option>
+        <option value="{{ url_for('providers', category=selected_category, search=search_query, sort='rating') }}" {% if sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+        <option value="{{ url_for('providers', category=selected_category, search=search_query, sort='name') }}" {% if sort == 'name' %}selected{% endif %}>Alphabetical (A-Z)</option>
+    </select>
+</div>
+
+<!-- Main Providers Grid Context Matrix -->
+<div class="providers-response-grid" id="providersListingGridSortingContainer">
+    {% if providers %}
+        {% for p in providers %}
+            <div class="service-provider-card provider-sorting-card-node" data-address="{{ p.address or '' }} {{ p.area or '' }} {{ p.city or '' }}">
+                <a href="{{ url_for('provider_details', provider_id=p.id) }}" style="display: contents;">
+                    <div class="card-thumb-frame">
+                        {% if p.profile_image %}
+                            <img src="/uploads/{{ p.profile_image }}" alt="{{ p.business_name }}">
+                        {% else %}
+                            <div class="avatar-placeholder" style="width:100%; height:100%; font-size:2rem; border-radius:0;">
+                                {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-meta-pane">
+                        <div class="card-top-row">
+                            <h4>{{ p.business_name }}</h4>
+                            
+                            <div class="card-right-badges">
+                                <div class="rating-pill" onclick="event.preventDefault();">
+                                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    <span>{% if p.avg_rating > 0 %}{{ '%.1f'|format(p.avg_rating) }}{% else %}New{% endif %}</span>
+                                </div>
+                                
+                                {% if session.get('user_id') %}
+                                <button class="fav-heart-toggle" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(this, {{ p.id }})" title="Save expert">
+                                    <svg class="heart-icon" viewBox="0 0 24 24" fill="{% if p.id in favorite_ids %}var(--red){% else %}none{% endif %}" stroke="{% if p.id in favorite_ids %}var(--red){% else %}currentColor{% endif %}"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <p class="specialty-text">{{ p.category }} Specialist · {{ p.experience or '0' }} Yrs Exp</p>
+                        
+                        <div class="geo-location-row">
+                            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"/></svg>
+                            <span class="computed-distance-display-node">Calculating distance...</span>
+                        </div>
+
+                        <p class="profile-address-text" title="📍 {{ p.address or p.area or 'Local Service' }}, {{ p.city }}">📍 {{ p.address or p.area or 'Local Service' }}, {{ p.city }}</p>
+
+                        <div class="card-actions-wrapper">
+                            <object>
+                                <a href="tel:{{ p.phone }}" class="btn btn-call-action btn-sm" onclick="event.stopPropagation();">
+                                    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                    <span>Call</span>
+                                </a>
+                            </object>
+                            <object>
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ (p.business_name + ' ' + p.area + ' ' + p.city)|urlencode }}" class="btn btn-path-action btn-sm" target="_blank" rel="noopener" onclick="event.stopPropagation();">
+                                    <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                                    <span>Directions</span>
+                                </a>
+                            </object>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <!-- EMPTY STATE LOGIC -->
+        <div class="premium-illustration-wrap">
+            <div class="vector-container">
+                {% if selected_category %}
+                    <!-- Dynamic Category Related Images -->
+                    {% set cat_lower = selected_category|lower %}
+                    
+                    {% if 'plumb' in cat_lower or 'pipe' in cat_lower or 'water' in cat_lower %}
+                        <!-- Plumbing Icon -->
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                            <path d="M70 60 L70 100 C70 115 85 120 95 110 L95 90 L115 90 L115 110 C125 120 140 115 140 100 L140 60" fill="none" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>
+                            <rect x="60" y="50" width="90" height="15" rx="5" fill="var(--text-muted)"/>
+                            <circle cx="105" cy="135" r="12" fill="var(--primary)" opacity="0.2"/>
+                            <path d="M105 135 L105 155" stroke="var(--primary)" stroke-width="4" stroke-linecap="round"/>
+                        </svg>
+                    {% elif 'elect' in cat_lower or 'wire' in cat_lower or 'power' in cat_lower %}
+                        <!-- Electrical Icon -->
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                            <path d="M110 50 L80 110 L100 110 L90 160 L130 90 L110 90 L120 50 Z" fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
+                            <circle cx="60" cy="60" r="4" fill="var(--text-muted)"/>
+                            <circle cx="140" cy="140" r="4" fill="var(--text-muted)"/>
+                        </svg>
+                    {% elif 'clean' in cat_lower or 'maid' in cat_lower or 'wash' in cat_lower %}
+                        <!-- Cleaning Icon -->
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                            <path d="M90 140 L110 60" stroke="var(--text-muted)" stroke-width="8" stroke-linecap="round"/>
+                            <path d="M80 150 C70 160 70 170 80 175 C90 180 110 180 120 175 C130 170 130 160 120 150 Z" fill="var(--primary)"/>
+                            <circle cx="70" cy="80" r="5" fill="#E2E8F0"/>
+                            <circle cx="130" cy="90" r="7" fill="#E2E8F0"/>
+                            <circle cx="60" cy="110" r="4" fill="#E2E8F0"/>
+                        </svg>
+                    {% elif 'health' in cat_lower or 'med' in cat_lower or 'doctor' in cat_lower %}
+                        <!-- Health Icon -->
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                            <rect x="85" y="60" width="30" height="80" rx="5" fill="#FFFFFF" stroke="var(--red)" stroke-width="2"/>
+                            <rect x="60" y="85" width="80" height="30" rx="5" fill="#FFFFFF" stroke="var(--red)" stroke-width="2"/>
+                            <rect x="92" y="72" width="16" height="56" fill="var(--red)"/>
+                            <rect x="72" y="92" width="56" height="16" fill="var(--red)"/>
+                        </svg>
+                    {% elif 'beauty' in cat_lower or 'salon' in cat_lower or 'hair' in cat_lower %}
+                        <!-- Beauty Icon -->
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                            <path d="M80 130 C80 100 120 100 120 130" fill="none" stroke="var(--text-muted)" stroke-width="4"/>
+                            <path d="M100 70 C120 70 130 90 130 110" fill="none" stroke="var(--text-muted)" stroke-width="4" stroke-linecap="round"/>
+                            <circle cx="100" cy="60" r="15" fill="var(--pink-soft)" opacity="0.5"/>
+                        </svg>
+                    {% elif 'auto' in cat_lower or 'car' in cat_lower or 'mechanic' in cat_lower %}
+                        <!-- Auto Icon -->
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                            <path d="M60 110 L70 90 L130 90 L140 110" fill="none" stroke="var(--text-muted)" stroke-width="4" stroke-linejoin="round"/>
+                            <circle cx="75" cy="110" r="10" fill="var(--text-muted)"/>
+                            <circle cx="125" cy="110" r="10" fill="var(--text-muted)"/>
+                            <path d="M100 60 L100 80" stroke="var(--primary)" stroke-width="4"/>
+                            <path d="M90 70 L110 70" stroke="var(--primary)" stroke-width="4"/>
+                        </svg>
+                    {% else %}
+                        <!-- Generic Tool Icon for other categories -->
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                            <path d="M130 70 L110 90 L120 100 L140 80 Z" fill="var(--text-muted)"/>
+                            <path d="M90 110 L110 90" stroke="var(--text-muted)" stroke-width="8" stroke-linecap="round"/>
+                            <circle cx="80" cy="120" r="15" fill="none" stroke="var(--primary)" stroke-width="4"/>
+                        </svg>
+                    {% endif %}
+                {% else %}
+                    <!-- Default Sad Face / No Results -->
+                    <svg viewBox="0 0 200 200" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
+                        <path d="M70 110 C70 90, 130 90, 130 110" fill="none" stroke="var(--text-muted)" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="85" cy="80" r="6" fill="var(--text-muted)"/>
+                        <circle cx="115" cy="80" r="6" fill="var(--text-muted)"/>
+                    </svg>
+                {% endif %}
+            </div>
+            
+            {% if selected_category %}
+                <h4>No {{ selected_category }} Specialists Found</h4>
+                <p>We couldn't find any experts in this category right now. Try selecting a different category or clearing filters.</p>
+            {% else %}
+                <h4>No Specialists Discovered</h4>
+                <p>Try clearing your active category filters or search for another term.</p>
+            {% endif %}
+            
+            {% if selected_category %}
+                 <a href="{{ url_for('providers') }}" class="btn btn-primary btn-sm">View All Categories</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Pagination Panel Controls wrapper -->
+{% if total_pages > 1 %}
+<nav class="pagination-footer-nav">
+    {% if page > 1 %}
+        <a href="{{ url_for('providers', category=selected_category, search=search_query, sort=sort, page=page-1) }}" class="page-link-node">&laquo;</a>
+    {% endif %}
+    
+    {% for p_num in range(1, total_pages + 1) %}
+        <a href="{{ url_for('providers', category=selected_category, search=search_query, sort=sort, page=p_num) }}" class="page-link-node {% if page == p_num %}active{% endif %}">
+            {{ p_num }}
+        </a>
+    {% endfor %}
+    
+    {% if page < total_pages %}
+        <a href="{{ url_for('providers', category=selected_category, search=search_query, sort=sort, page=page+1) }}" class="page-link-node">&raquo;</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block page_script %}
+<script>
+    const GEOAPIFY_API_KEY = "3f4cf2a1585b4efa9e9bc4a430535d9c";
+
+    function calculateHaversineDistanceInKm(lat1, lon1, lat2, lon2) {
+        const earthRadiusKm = 6371;
+        const deltaLatRad = (lat2 - lat1) * Math.PI / 180;
+        const deltaLonRad = (lon2 - lon1) * Math.PI / 180;
+        
+        const a = Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(deltaLonRad / 2) * Math.sin(deltaLonRad / 2);
+                  
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusKm * c;
+    }
+
+    async function processListingDistancesAndAutoSort() {
+        const userLat = parseFloat(localStorage.getItem('user_selected_loc_lat'));
+        const userLon = parseFloat(localStorage.getItem('user_selected_loc_lon'));
+        
+        const cards = Array.from(document.querySelectorAll('.provider-sorting-card-node'));
+        if (!userLat || !userLon || cards.length === 0) {
+            cards.forEach(c => {
+                const textDisplay = c.querySelector('.computed-distance-display-node');
+                if (textDisplay) textDisplay.innerText = c.getAttribute('data-address').split(' ').slice(-2).join(', ');
+            });
+            return;
+        }
+
+        const evaluationPromises = cards.map(async (card) => {
+            const addressText = card.getAttribute('data-address');
+            const outputNode = card.querySelector('.computed-distance-display-node');
+            if (!addressText || !outputNode) return { card, distance: Infinity };
+
+            try {
+                const lookupUrl = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(addressText)}&limit=1&apiKey=${GEOAPIFY_API_KEY}`;
+                const res = await fetch(lookupUrl);
+                const data = await res.json();
+
+                if (data.features && data.features.length > 0) {
+                    const targetLat = data.features[0].properties.lat;
+                    const targetLon = data.features[0].properties.lon;
+                    const calculatedKm = calculateHaversineDistanceInKm(userLat, userLon, targetLat, targetLon);
+                    
+                    outputNode.innerText = `${calculatedKm.toFixed(1)} km away`;
+                    return { card, distance: calculatedKm };
+                } else {
+                    outputNode.innerText = "Nearby area";
+                    return { card, distance: 999 };
+                }
+            } catch (err) {
+                outputNode.innerText = "Nearby area";
+                return { card, distance: 999 };
+            }
+        });
+
+        const sortedPayloadResults = await Promise.all(evaluationPromises);
+        sortedPayloadResults.sort((a, b) => a.distance - b.distance);
+
+        const parentGrid = document.getElementById('providersListingGridSortingContainer');
+        if (parentGrid) {
+            sortedPayloadResults.forEach(item => {
+                parentGrid.appendChild(item.card);
+            });
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        processListingDistancesAndAutoSort();
+    });
+</script>
+{% endblock %}

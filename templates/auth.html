@@ -1,0 +1,650 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Access – PeopleConnect{% endblock %}
+
+{% block page_style %}
+<style>
+    /* ===== MOBILE RESPONSIVE: < 769px ===== */
+    @media (max-width: 768px) {
+        .desktop-page-layout-grid { display: block !important; }
+        .desktop-navigation-sidebar-container { display: none !important; }
+        .main-content { padding: 0 !important; max-width: 100% !important; }
+    }
+
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .desktop-page-layout-grid { display: block !important; }
+        .desktop-navigation-sidebar-container { display: none !important; }
+        .main-content { padding: 0 !important; max-width: 100% !important; }
+    }
+
+    /* ===== DESKTOP RESPONSIVE: 1025px+ ===== */
+    @media (min-width: 1025px) {
+        .desktop-page-layout-grid { display: block !important; }
+        .desktop-navigation-sidebar-container { display: none !important; }
+        .main-content { padding: 0 !important; max-width: 100% !important; }
+    }
+
+    .auth-app-frame {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        background: #FFFFFF;
+    }
+
+    .auth-side-panel {
+        display: none;
+        flex: 1.1;
+        background: var(--primary-gradient);
+        padding: 40px;
+        position: relative;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #FFFFFF;
+        overflow: hidden;
+    }
+
+    .auth-side-panel::before {
+        content: '';
+        position: absolute;
+        top: -20%;
+        right: -10%;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 177, 0, 0.18) 0%, rgba(255,255,255,0) 70%);
+        pointer-events: none;
+    }
+
+    .auth-side-panel::after {
+        content: '';
+        position: absolute;
+        bottom: -15%;
+        left: -8%;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.06);
+        pointer-events: none;
+    }
+
+    .auth-side-badge {
+        position: relative;
+        z-index: 2;
+        align-self: flex-start;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.16);
+        backdrop-filter: blur(4px);
+        padding: 4px 12px;
+        border-radius: var(--radius-full);
+        font-size: 0.74rem;
+        font-weight: 800;
+        margin-top: 14px;
+    }
+
+    .logo-container-auth { display: flex; align-items: center; gap: 10px; text-decoration: none; position: relative; z-index: 2; }
+    
+    .logo-img-auth-wrapper {
+        width: 44px;
+        height: 44px;
+        background: #FFFFFF;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .logo-img-auth { height: 32px; width: auto; object-fit: contain; }
+    .logo-text-auth { font-family: var(--font-display); font-size: 1.5rem; font-weight: 900; letter-spacing: -0.04em; color: #FFFFFF; }
+
+    .side-panel-hero-text { position: relative; z-index: 2; }
+    .side-panel-hero-text h2 {
+        font-size: 2.2rem;
+        font-weight: 900;
+        color: #FFFFFF;
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+        margin-bottom: 12px;
+    }
+
+    .side-panel-hero-text p {
+        font-size: 1.02rem;
+        color: rgba(255, 255, 255, 0.88);
+        font-weight: 500;
+        line-height: 1.45;
+        max-width: 420px;
+    }
+
+    .side-panel-footer { font-size: 0.84rem; color: rgba(255, 255, 255, 0.65); font-weight: 500; position: relative; z-index: 2; }
+
+    .auth-form-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 16px 14px 40px;
+        background: var(--bg);
+        overflow-y: auto;
+    }
+
+    .auth-mobile-brand-row { 
+        margin-bottom: 14px; 
+        width: 100%; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+    }
+    
+    .auth-mobile-logo-wrap { display: flex; align-items: center; justify-content: center; text-decoration: none; }
+    .auth-mobile-logo-wrap img { height: 38px; width: auto; }
+
+    .auth-card-workspace {
+        width: 100%;
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+    }
+
+    .auth-title-stack { margin-bottom: 16px; text-align: left; }
+    .auth-title-stack h1 { font-size: 1.45rem; font-weight: 800; color: var(--text); margin-bottom: 2px; letter-spacing: -0.02em; }
+    .auth-title-stack p { font-size: 0.86rem; font-weight: 500; color: var(--text-secondary); line-height: 1.4; }
+
+    .form-group-field { margin-bottom: 12px; }
+
+    .form-group-field label {
+        display: block;
+        font-size: 0.76rem;
+        font-weight: 800;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .modern-input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 0.94rem;
+        font-weight: 500;
+        background: #FFFFFF;
+        color: var(--text);
+        transition: all 0.15s var(--transition);
+    }
+
+    .modern-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
+    .modern-input::placeholder { color: var(--text-muted); }
+
+    select.modern-input {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B5866' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        background-size: 12px;
+        padding-right: 36px;
+    }
+
+    .custom-file-upload-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: #FFFFFF;
+        border: 1.5px dashed var(--border);
+        border-radius: var(--radius-md);
+        padding: 11px;
+        cursor: pointer;
+        transition: all 0.15s var(--transition);
+        justify-content: center;
+        text-align: center;
+    }
+
+    .custom-file-upload-wrapper:hover { border-color: var(--primary); background: var(--primary-light); }
+    .custom-file-upload-wrapper span { font-size: 0.86rem; font-weight: 700; color: var(--text-secondary); }
+
+    .custom-file-upload-wrapper input[type="file"] {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .role-selection-pills {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        background: var(--border-light);
+        padding: 4px;
+        border-radius: var(--radius-md);
+        margin-bottom: 16px;
+        border: 1px solid var(--border);
+    }
+
+    .role-pill {
+        padding: 8px 12px;
+        border-radius: calc(var(--radius-md) - 2px);
+        text-align: center;
+        font-weight: 800;
+        font-size: 0.8rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        transition: all 0.15s ease;
+        user-select: none;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .role-pill.active { background: #FFFFFF; color: var(--primary); box-shadow: var(--shadow-premium); }
+
+    .provider-dynamic-fields-wrapper {
+        display: none;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--border);
+    }
+
+    .provider-dynamic-fields-wrapper.visible { display: block; animation: fieldSlideTight 0.25s var(--transition); }
+
+    .custom-category-input-wrap {
+        display: none;
+        margin-top: 8px;
+        animation: fieldSlideTight 0.2s var(--transition);
+    }
+    .custom-category-input-wrap.visible { display: block; }
+
+    @keyframes fieldSlideTight {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-pane { display: none; }
+    .form-pane.active { display: block; animation: fieldSlideTight 0.25s var(--transition); }
+
+    .form-toggle-switch { margin-top: 16px; font-size: 0.88rem; font-weight: 500; color: var(--text-secondary); text-align: center; }
+    .form-toggle-switch span { color: var(--primary); font-weight: 700; cursor: pointer; margin-left: 4px; }
+    .form-toggle-switch span:hover { text-decoration: underline; }
+
+    .biz-images-upload-zone {
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s var(--transition);
+        background: var(--border-light);
+        position: relative;
+    }
+    .biz-images-upload-zone:hover { border-color: var(--primary); background: var(--primary-light); }
+    .biz-images-upload-zone.dragover { border-color: var(--primary); background: var(--primary-light); }
+    .biz-images-upload-zone .upload-icon { margin-bottom: 6px; }
+    .biz-images-upload-zone p { font-size: 0.84rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 2px; }
+    .biz-images-upload-zone small { font-size: 0.76rem; color: var(--text-muted); }
+    .biz-images-upload-zone input[type="file"] {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0; cursor: pointer;
+    }
+
+    .biz-images-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .biz-img-preview-item {
+        position: relative;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        aspect-ratio: 4/3;
+        background: var(--border-light);
+    }
+    .biz-img-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .biz-img-preview-item .remove-img-btn {
+        position: absolute; top: 4px; right: 4px;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: rgba(0,0,0,0.6); color: #FFFFFF;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 13px; font-weight: 700;
+        line-height: 1; border: none; transition: background 0.15s;
+    }
+    .biz-img-preview-item .remove-img-btn:hover { background: var(--red); }
+
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .auth-side-panel { display: flex; padding: 30px 28px; }
+        .auth-mobile-brand-row { display: none; }
+        .auth-form-panel { padding: 30px 28px; justify-content: center; }
+        .auth-card-workspace {
+            max-width: 400px;
+            background: #FFFFFF;
+            padding: 20px 18px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-premium);
+        }
+        .side-panel-hero-text h2 { font-size: 1.8rem; }
+        .side-panel-hero-text p { font-size: 0.9rem; }
+    }
+
+    /* ===== DESKTOP RESPONSIVE: 1025px+ ===== */
+    @media (min-width: 1025px) {
+        .auth-side-panel { display: flex; }
+        .auth-mobile-brand-row { display: none; }
+        .auth-form-panel { padding: 40px; justify-content: center; }
+        .auth-card-workspace {
+            max-width: 420px;
+            background: #FFFFFF;
+            padding: 24px 20px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-premium);
+        }
+        .auth-title-stack { margin-bottom: 18px; }
+        .form-group-field { margin-bottom: 12px; }
+        .role-selection-pills { background: var(--bg); border: 1px solid var(--border-light); }
+        .custom-file-upload-wrapper { background: var(--border-light); }
+        .biz-images-upload-zone { background: var(--bg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-app-frame">
+
+    <section class="auth-side-panel">
+        <a href="{{ url_for('index') }}" class="logo-container-auth">
+            <div class="logo-img-auth-wrapper">
+                <img src="{{ logo_url }}" alt="PeopleConnect Logo" class="logo-img-auth">
+            </div>
+            <span class="logo-text-auth">PeopleConnect</span>
+        </a>
+        <div class="side-panel-hero-text">
+            <span class="auth-side-badge"><span class="pulse-dot" style="background:#5CFFB1;"></span>1,200+ live listings this week</span>
+            <h2>Find the perfect local expert for your needs.</h2>
+            <p>Connect immediately with audited electrical partners, plumbers, dining hubs, and specialized neighborhood services — zero middleman markup tracking.</p>
+        </div>
+        <div class="side-panel-footer">
+            &copy; 2026 PeopleConnect Network. All rights reserved.
+        </div>
+    </section>
+
+    <section class="auth-form-panel">
+
+        <div class="auth-mobile-brand-row">
+            <a href="{{ url_for('index') }}" class="auth-mobile-logo-wrap">
+                <img src="{{ logo_url }}" alt="PeopleConnect Logo">
+            </a>
+        </div>
+
+        <div class="auth-card-workspace">
+            <header class="auth-title-stack">
+                <h1 id="auth-main-headline">Welcome back</h1>
+                <p id="auth-sub-headline">Sign in to manage your account or explore services</p>
+            </header>
+
+            <form id="auth-login-pane" class="form-pane active" action="{{ url_for('login') }}" method="POST">
+                <div class="form-group-field">
+                    <label>Email Address</label>
+                    <input type="email" class="modern-input" name="email" required placeholder="name@example.com" autocomplete="email">
+                </div>
+                <div class="form-group-field">
+                    <label>Password</label>
+                    <input type="password" class="modern-input" name="password" required placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 4px;">Sign In</button>
+
+                <div class="form-toggle-switch">
+                    Don't have an account? <span onclick="shiftAuthMode('register')">Create one</span>
+                </div>
+            </form>
+
+            <form id="auth-register-pane" class="form-pane" action="{{ url_for('register') }}" method="POST" enctype="multipart/form-data">
+                <div class="role-selection-pills">
+                    <div class="role-pill active" id="pill-user" onclick="assignRoleState('user')">General User</div>
+                    <div class="role-pill" id="pill-provider" onclick="assignRoleState('provider')">Service Partner</div>
+                </div>
+                <input type="hidden" name="account_type" id="form-role-tracker" value="user">
+
+                <div class="form-group-field">
+                    <label>Full Name</label>
+                    <input type="text" class="modern-input" name="name" placeholder="John Doe" required>
+                </div>
+                <div class="form-group-field">
+                    <label>Email Address</label>
+                    <input type="email" class="modern-input" name="email" placeholder="john@example.com" autocomplete="email" required>
+                </div>
+                <div class="form-group-field">
+                    <label>Mobile Number</label>
+                    <input type="tel" class="modern-input" name="phone" placeholder="9876543210" required>
+                </div>
+                <div class="form-group-field">
+                    <label>Password</label>
+                    <input type="password" class="modern-input" id="reg-password" name="password" placeholder="Min 6 characters" autocomplete="new-password" required minlength="6">
+                </div>
+                <div class="form-group-field">
+                    <label>Confirm Password</label>
+                    <input type="password" class="modern-input" id="reg-confirm-password" name="confirm_password" placeholder="Re-enter password" autocomplete="new-password" required>
+                </div>
+
+                <div class="provider-dynamic-fields-wrapper" id="provider-fields-box">
+                    <div class="form-group-field">
+                        <label>Business Name *</label>
+                        <input type="text" class="modern-input" id="val-biz-name" name="business_name" placeholder="Apex Electric Services">
+                    </div>
+                    <div class="form-group-field">
+                        <label>Service Category *</label>
+                        <select class="modern-input" id="val-category" name="category" onchange="toggleCustomCategoryField(this, 'reg-custom-wrap', 'reg-custom-input')">
+                            <option value="">Select Specialty</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.category_name }}">{{ cat.category_name }}</option>
+                            {% endfor %}
+                            <option value="__OTHER__">Other / Not Listed...</option>
+                        </select>
+                        <div class="custom-category-input-wrap" id="reg-custom-wrap">
+                            <input type="text" class="modern-input" id="reg-custom-input" name="custom_category" placeholder="Enter your business trade specialty type...">
+                        </div>
+                    </div>
+                    <div class="form-group-field">
+                        <label>City *</label>
+                        <input type="text" class="modern-input" id="val-city" name="city" placeholder="Nizamabad">
+                    </div>
+                    <div class="form-group-field">
+                        <label>Area / Sector *</label>
+                        <input type="text" class="modern-input" id="val-area" name="area" placeholder="Subhash Nagar">
+                    </div>
+                    <div class="form-group-field">
+                        <label>Business Phone *</label>
+                        <input type="tel" class="modern-input" id="val-biz-phone" name="provider_phone" placeholder="Public hotline">
+                    </div>
+                    <div class="form-group-field">
+                        <label>Years of Experience</label>
+                        <input type="text" class="modern-input" name="experience" placeholder="e.g. 4 Years">
+                    </div>
+                    <div class="form-group-field">
+                        <label>Business Description</label>
+                        <input type="text" class="modern-input" name="description" placeholder="Short description of specialties...">
+                    </div>
+                    <div class="form-group-field">
+                        <label>Full Address</label>
+                        <input type="text" class="modern-input" name="address" placeholder="Shop/Office details, Landmark">
+                    </div>
+                    <div class="form-group-field">
+                        <label>Profile Photo</label>
+                        <div class="custom-file-upload-wrapper">
+                            <span>📁 Choose Profile Image...</span>
+                            <input type="file" name="profile_image" accept="image/*" onchange="this.parentElement.querySelector('span').textContent = this.files[0] ? '✓ ' + this.files[0].name : '📁 Choose Profile Image...'">
+                        </div>
+                    </div>
+                    <div class="form-group-field">
+                        <label>Business / Gallery Images</label>
+                        <p style="font-size:0.76rem; color:var(--text-muted); margin-bottom:6px; font-weight:600; text-transform:none; letter-spacing:0;">Add photos of your clinic, shop, office, or workspace (up to 10)</p>
+                        <div class="biz-images-upload-zone" id="regBizZone">
+                            <div class="upload-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                            </div>
+                            <p>Click or drag images here</p>
+                            <small>PNG, JPG, GIF, WebP &middot; Max 5MB each</small>
+                            <input type="file" name="business_images" id="regBusinessImages" multiple accept="image/png,image/jpeg,image/gif,image/webp" onchange="previewRegBizImages(this)">
+                        </div>
+                        <div class="biz-images-preview-grid" id="regBizImagePreview"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 12px;">Create Account</button>
+
+                <div class="form-toggle-switch">
+                    Already have an account? <span onclick="shiftAuthMode('login')">Sign In</span>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block page_script %}
+<script>
+    var headlineMain = document.getElementById('auth-main-headline');
+    var headlineSub = document.getElementById('auth-sub-headline');
+    var loginPane = document.getElementById('auth-login-pane');
+    var registerPane = document.getElementById('auth-register-pane');
+    var providerFieldsBox = document.getElementById('provider-fields-box');
+    var pillUser = document.getElementById('pill-user');
+    var pillProvider = document.getElementById('pill-provider');
+    var formRoleTracker = document.getElementById('form-role-tracker');
+
+    var providerRequiredFields = [
+        document.getElementById('val-biz-name'),
+        document.getElementById('val-category'),
+        document.getElementById('val-city'),
+        document.getElementById('val-area'),
+        document.getElementById('val-biz-phone')
+    ];
+
+    if (window.location.search.includes('mode=register')) {
+        shiftAuthMode('register');
+    }
+
+    function shiftAuthMode(mode) {
+        document.querySelectorAll('.form-pane').forEach(function(form) {
+            form.classList.remove('active');
+        });
+
+        if (mode === 'register') {
+            registerPane.classList.add('active');
+            headlineMain.textContent = 'Create account';
+            headlineSub.textContent = 'Join PeopleConnect to manage or offer local services';
+            assignRoleState(formRoleTracker.value);
+        } else {
+            loginPane.classList.add('active');
+            headlineMain.textContent = 'Welcome back';
+            headlineSub.textContent = 'Sign in to manage your account or explore services';
+            providerRequiredFields.forEach(function(field) { if(field) field.removeAttribute('required'); });
+            document.getElementById('reg-custom-input').removeAttribute('required');
+        }
+    }
+
+    function assignRoleState(role) {
+        pillUser.classList.remove('active');
+        pillProvider.classList.remove('active');
+
+        if (role === 'provider') {
+            pillProvider.classList.add('active');
+            providerFieldsBox.classList.add('visible');
+            formRoleTracker.value = 'provider';
+
+            providerRequiredFields.forEach(function(field) {
+                if(field) field.setAttribute('required', 'true');
+            });
+            
+            var catSelect = document.getElementById('val-category');
+            if (catSelect && catSelect.value === '__OTHER__') {
+                document.getElementById('reg-custom-input').setAttribute('required', 'true');
+            }
+        } else {
+            pillUser.classList.add('active');
+            providerFieldsBox.classList.remove('visible');
+            formRoleTracker.value = 'user';
+
+            providerRequiredFields.forEach(function(field) {
+                if(field) field.removeAttribute('required');
+            });
+            document.getElementById('reg-custom-input').removeAttribute('required');
+        }
+    }
+
+    function toggleCustomCategoryField(selectElement, wrapId, inputId) {
+        var wrap = document.getElementById(wrapId);
+        var input = document.getElementById(inputId);
+        if (selectElement.value === '__OTHER__') {
+            wrap.classList.add('visible');
+            if (formRoleTracker.value === 'provider') {
+                input.setAttribute('required', 'true');
+            }
+            input.focus();
+        } else {
+            wrap.classList.remove('visible');
+            input.removeAttribute('required');
+        }
+    }
+
+    var regForm = document.getElementById('auth-register-pane');
+    var passwordInput = document.getElementById('reg-password');
+    var confirmPasswordInput = document.getElementById('reg-confirm-password');
+
+    if (regForm) {
+        regForm.addEventListener('submit', function(e) {
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                e.preventDefault();
+                alert('Passwords do not match. Please verify and try again.');
+                confirmPasswordInput.focus();
+            }
+        });
+    }
+
+    var regBizZone = document.getElementById('regBizZone');
+    if (regBizZone) {
+        ['dragenter', 'dragover'].forEach(function(evt) {
+            regBizZone.addEventListener(evt, function(e) { e.preventDefault(); regBizZone.classList.add('dragover'); });
+        });
+        ['dragleave', 'drop'].forEach(function(evt) {
+            regBizZone.addEventListener(evt, function(e) { e.preventDefault(); regBizZone.classList.remove('dragover'); });
+        });
+        regBizZone.addEventListener('drop', function(e) {
+            var input = document.getElementById('regBusinessImages');
+            input.files = e.dataTransfer.files;
+            previewRegBizImages(input);
+        });
+    }
+
+    function previewRegBizImages(input) {
+        var grid = document.getElementById('regBizImagePreview');
+        grid.innerHTML = '';
+        var files = Array.from(input.files).slice(0, 10);
+        files.forEach(function(file, i) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var div = document.createElement('div');
+                div.className = 'biz-img-preview-item';
+                div.innerHTML = '<img src="' + e.target.result + '" alt="Preview">' +
+                    '<button type="button" class="remove-img-btn" onclick="removeRegBizImage(' + i + ')">&times;</button>';
+                grid.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removeRegBizImage(index) {
+        var input = document.getElementById('regBusinessImages');
+        var dt = new DataTransfer();
+        Array.from(input.files).forEach(function(f, i) { if (i !== index) dt.items.add(f); });
+        input.files = dt.files;
+        previewRegBizImages(input);
+    }
+</script>
+{% endblock %}

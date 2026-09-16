@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found – PeopleConnect{% endblock %}
+
+{% block page_style %}
+<style>
+    .error-page-container {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; text-align: center; padding: 60px 24px 40px; min-height: 70vh;
+    }
+
+    .error-code {
+        font-size: 6rem; font-weight: 800; color: var(--primary);
+        letter-spacing: -0.06em; line-height: 1; margin-bottom: 8px;
+    }
+
+    .error-page-container h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .error-page-container p { font-size: 0.95rem; color: var(--text-secondary); max-width: 400px; line-height: 1.6; margin-bottom: 28px; }
+
+    .error-illustration-wrap { width: 150px; height: 150px; margin-bottom: 12px; }
+    .error-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+    @media (min-width: 769px) {
+        .error-code { font-size: 8rem; }
+        .error-page-container { padding: 80px 24px 60px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page-container">
+    <div class="error-illustration-wrap">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="75" fill="#e8f8f5"/>
+            <path d="M80 120a30 30 0 0 1 40 0" stroke="#117a65" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <circle cx="80" cy="90" r="6" fill="#0b5345"/>
+            <circle cx="120" cy="90" r="6" fill="#0b5345"/>
+        </svg>
+    </div>
+    <div class="error-code">404</div>
+    <h1>Page Not Found</h1>
+    <p>The routing path you specified does not point to a configured local interface layer node. Let's get you back on track.</p>
+    <div class="error-actions">
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">Go Home</a>
+        <a href="{{ url_for('providers') }}" class="btn btn-secondary btn-lg">Browse Services</a>
+    </div>
+</div>
+{% endblock %}

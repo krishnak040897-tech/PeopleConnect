@@ -1,0 +1,734 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile – PeopleConnect{% endblock %}
+
+{% block page_style %}
+<style>
+    .workspace-layout-matrix {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        align-items: start;
+    }
+
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .workspace-layout-matrix { grid-template-columns: 240px 1fr; gap: 16px; }
+    }
+
+    /* ===== DESKTOP RESPONSIVE: 1025px+ ===== */
+    @media (min-width: 1025px) {
+        .workspace-layout-matrix { grid-template-columns: 290px 1fr; gap: 20px; }
+    }
+
+    .profile-summary-panel {
+        background: #FFFFFF;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+        box-shadow: var(--shadow-premium);
+    }
+
+    .panel-accent-header { height: 50px; background: var(--primary-gradient); }
+
+    .panel-avatar-row {
+        padding: 0 16px;
+        margin-top: -26px;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .panel-avatar-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 3px solid #FFFFFF;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #FFFFFF;
+        box-shadow: 0 4px 10px rgba(20, 19, 31, 0.08);
+    }
+
+    .panel-avatar-circle img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+
+    .panel-body-section { padding: 10px 16px 16px; }
+
+    .panel-body-section h2 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.03em;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .panel-body-section .account-type-badge {
+        display: inline-block;
+        background: var(--primary-light);
+        color: var(--primary);
+        font-size: 0.68rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: var(--radius-full);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 14px;
+    }
+
+    .panel-meta-display-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .panel-meta-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--bg);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 8px 12px;
+        min-width: 0;
+    }
+
+    .panel-meta-card .meta-icon-box {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-sm);
+        background: #FFFFFF;
+        border: 1px solid var(--border-light);
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .panel-meta-card .meta-icon-box svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+
+    .panel-meta-card .meta-text-stack { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+
+    .panel-meta-card .meta-text-stack .meta-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        margin-bottom: 1px;
+    }
+
+    .panel-meta-card .meta-text-stack .meta-value {
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.3;
+    }
+
+    .btn-logout-highlight {
+        background: var(--primary-gradient);
+        color: #FFFFFF !important;
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 0.94rem;
+        font-weight: 700;
+        border-radius: var(--radius-md);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        grid-column: 1 / -1;
+        box-shadow: var(--shadow-premium);
+        text-decoration: none;
+        box-sizing: border-box;
+    }
+    .btn-logout-highlight:hover { background: var(--primary-dark); }
+
+    .profile-main-column { display: flex; flex-direction: column; gap: 14px; }
+
+    .profile-card {
+        background: #FFFFFF;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+        box-shadow: var(--shadow-premium);
+    }
+
+    .profile-card-header {
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .profile-card-header h3 {
+        font-size: 1.08rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .profile-card-header h3 svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+
+    .profile-card-body { padding: 14px 18px; }
+
+    .bms-summary-slip { 
+        display: flex; 
+        flex-direction: column; 
+        background: #FFFFFF; 
+        transition: max-height 0.3s ease-in-out, opacity 0.2s ease;
+        opacity: 1;
+        overflow: hidden;
+    }
+    
+    .bms-summary-slip.collapsed {
+        display: none;
+        opacity: 0;
+    }
+
+    .btn-toggle-summary {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        border-radius: var(--radius-sm);
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .btn-toggle-summary:hover {
+        background: var(--bg);
+        color: var(--primary);
+    }
+    .btn-toggle-summary svg {
+        width: 20px;
+        height: 20px;
+        transition: transform 0.3s ease;
+    }
+    .btn-toggle-summary.expanded svg {
+        transform: rotate(180deg);
+    }
+
+    .slip-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 10px 0;
+        border-bottom: 1px dashed var(--border);
+        gap: 20px;
+    }
+
+    .slip-row:last-child { border-bottom: none; padding-bottom: 2px; }
+    .slip-row:first-child { padding-top: 2px; }
+    .slip-row.block-row { flex-direction: column; gap: 2px; }
+    .slip-row.block-row .slip-value { text-align: left; line-height: 1.45; }
+
+    .empty-state-box { text-align: center; padding: 30px 16px; }
+    .empty-state-box fill { var(--primary-light); }
+    .empty-state-box h4 { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .empty-state-box p { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5; }
+
+    .inquiry-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .inquiry-item {
+        background: var(--bg);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        border-left: 3px solid var(--primary);
+        transition: background 0.2s ease;
+    }
+
+    .inquiry-item.unread { background: var(--primary-light); }
+    .inquiry-item .inq-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 4px; }
+    .inquiry-item .inq-name { font-size: 0.92rem; font-weight: 700; color: var(--text); }
+    .inquiry-item .inq-phone { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
+    .inquiry-item .inq-message { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 4px; }
+    .inquiry-item .inq-time { font-size: 0.74rem; color: var(--text-muted); font-weight: 500; }
+
+    .mark-read-btn {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 1px 6px;
+        border-radius: var(--radius-sm);
+        transition: all 0.15s ease;
+    }
+    .mark-read-btn:hover { color: var(--primary); background: var(--primary-light); }
+    .unread-badge { background: var(--primary); color: #FFF; font-size: 0.68rem; font-weight: 800; padding: 1px 6px; border-radius: var(--radius-full); margin-left: 4px; }
+
+    .stats-grid { 
+        display: grid; 
+        grid-template-columns: repeat(4, 1fr); 
+        gap: 6px; 
+    }
+    
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 600px) and (max-width: 1024px) {
+        .stats-grid { gap: 8px; }
+        .stat-card { padding: 10px 6px; }
+        .stat-card .stat-num { font-size: 1.2rem; }
+        .stat-card .stat-label { font-size: 0.65rem; }
+    }
+
+    @media (min-width: 1025px) {
+        .stats-grid { gap: 10px; }
+        .stat-card { padding: 12px; }
+        .stat-card .stat-num { font-size: 1.5rem; }
+        .stat-card .stat-label { font-size: 0.72rem; }
+    }
+
+    .stat-card {
+        background: var(--bg);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: 8px 4px;
+        text-align: center;
+        min-width: 0;
+    }
+    @media (min-width: 600px) {
+        .stat-card { padding: 12px; }
+    }
+    
+    .stat-card .stat-num { 
+        font-family: var(--font-display); 
+        font-size: 1.1rem; 
+        font-weight: 800; 
+        color: var(--text); 
+        letter-spacing: -0.02em; 
+    }
+    @media (min-width: 600px) {
+        .stat-card .stat-num { font-size: 1.5rem; }
+    }
+    
+    .stat-card .stat-label { 
+        font-size: 0.58rem; 
+        font-weight: 700; 
+        color: var(--text-secondary); 
+        text-transform: uppercase; 
+        letter-spacing: 0.02em; 
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    @media (min-width: 600px) {
+        .stat-card .stat-label { font-size: 0.72rem; letter-spacing: 0.04em; }
+    }
+
+    .quick-settings-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 580px) and (max-width: 1024px) {
+        .quick-settings-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    }
+    
+    @media (min-width: 1025px) {
+        .quick-settings-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    }
+
+    .quick-settings-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: var(--bg);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    .quick-settings-link:hover { border-color: var(--primary); }
+    .quick-settings-link .qs-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        background: var(--primary-light);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .quick-settings-link .qs-title { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .quick-settings-link .qs-sub { font-size: 0.76rem; font-weight: 500; color: var(--text-secondary); }
+
+    .subscription-status-banner {
+        padding: 18px 20px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+        box-shadow: var(--shadow-premium);
+    }
+    .subscription-status-banner.active-premium { background: var(--green-bg); border: 1.5px solid rgba(12, 166, 120, 0.2); color: var(--green); }
+    .subscription-status-banner.inactive-premium { background: var(--red-bg); border: 1.5px solid rgba(226, 59, 46, 0.2); color: var(--red); }
+    
+    .subscription-status-banner .banner-text h4 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: inherit; }
+    .subscription-status-banner .banner-text p { font-size: 0.88rem; font-weight: 500; opacity: 0.9; margin: 2px 0 6px 0; }
+    
+    .subscription-ledger-details {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        border-top: 1px dashed rgba(20, 19, 31, 0.1);
+        padding-top: 6px;
+        margin-top: 4px;
+    }
+    .subscription-ledger-details span strong { color: var(--text); }
+
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .subscription-status-banner {
+            flex-direction: row;
+            padding: 14px 18px;
+            gap: 14px;
+        }
+        .subscription-status-banner .btn {
+            width: auto;
+            flex-shrink: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .subscription-status-banner {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 12px 14px;
+            gap: 10px;
+        }
+        .subscription-status-banner .btn {
+            width: 100%;
+            margin-top: 4px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="workspace-layout-matrix">
+
+    <aside class="profile-summary-panel">
+        <div class="panel-accent-header"></div>
+        <div class="panel-avatar-row">
+            <div class="panel-avatar-circle">
+                {% if session.account_type == 'provider' and provider and provider.profile_image %}
+                    <img src="/uploads/{{ provider.profile_image }}" alt="Profile">
+                {% else %}
+                    <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.3rem; border-radius:50%;">
+                        {{ user.name[0]|upper if user and user.name else 'P' }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="panel-body-section">
+            <h2>{{ user.name if user else 'Profile' }}</h2>
+            <span class="account-type-badge">{{ 'Service Partner' if user.account_type == 'provider' else 'General User' }}</span>
+
+            <div class="panel-meta-display-grid">
+                <div class="panel-meta-card">
+                    <div class="meta-icon-box">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    </div>
+                    <div class="meta-text-stack">
+                        <span class="meta-label">Email Address</span>
+                        <span class="meta-value" title="{{ user.email if user else '' }}">{{ user.email if user else 'Not Available' }}</span>
+                    </div>
+                </div>
+
+                <div class="panel-meta-card">
+                    <div class="meta-icon-box">
+                        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 .81 2.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <div class="meta-text-stack">
+                        <span class="meta-label">Mobile Number</span>
+                        <span class="meta-value">{{ user.phone if user and user.phone else 'Not configured' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="profile-main-column">
+
+        {% if session.account_type == 'provider' and provider %}
+
+            {% if provider.is_subscribed == 1 %}
+                <div class="subscription-status-banner active-premium">
+                    <div class="banner-text" style="flex: 1; min-width: 0;">
+                        <h4>Premium Service Partner Active</h4>
+                        <p>Your business profile is currently discoverable across public lists channels.</p>
+                        
+                        <div class="subscription-ledger-details">
+                            <span id="subLastRenewal">Last Renewal Date: <strong>{{ provider.subscription_started_at if provider.subscription_started_at else provider.created_at }}</strong></span>
+                            <span id="subEndDate">Subscription End Date: <strong>{{ provider.subscription_expires_at if provider.subscription_expires_at else 'N/A' }}</strong></span>
+                            <span id="subDaysLeft">Time Remaining: <strong>Calculating...</strong></span>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="paySubscriptionFee()">Renew Early (₹1)</button>
+                </div>
+            {% else %}
+                <div class="subscription-status-banner inactive-premium">
+                    <div class="banner-text">
+                        <h4>Subscription Payment Required</h4>
+                        <p>Your business profile tracking is hidden from consumers. Pay the monthly ₹1 service fee to restore active visibility features.</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" style="box-shadow:none;" onclick="paySubscriptionFee()">Activate Now (₹1)</button>
+                </div>
+            {% endif %}
+
+            {% if provider_stats %}
+            <div class="profile-card">
+                <div class="profile-card-body">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-num">{{ provider_stats.views }}</div>
+                            <div class="stat-label">Views</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-num">{{ provider_stats.reviews }}</div>
+                            <div class="stat-label">Reviews</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-num">{{ provider_stats.inquiries }}</div>
+                            <div class="stat-label">Inquiries</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-num">{{ provider_stats.favorites }}</div>
+                            <div class="stat-label">Favorites</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if inquiries %}
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <h3>
+                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Received Inquiries
+                        {% if unread_count > 0 %}<span class="unread-badge">{{ unread_count }} new</span>{% endif %}
+                    </h3>
+                </div>
+                <div class="profile-card-body">
+                    <div class="inquiry-list">
+                        {% for inq in inquiries[:5] %}
+                        <div class="inquiry-item {% if not inq.is_read %}unread{% endif %}" id="inq-{{ inq.id }}">
+                            <div class="inq-header">
+                                <div>
+                                    <span class="inq-name">{{ inq.name }}</span>
+                                    {% if inq.phone %}<span class="inq-phone" style="margin-left:8px;">{{ inq.phone }}</span>{% endif %}
+                                </div>
+                                {% if not inq.is_read %}<button class="mark-read-btn" onclick="markRead({{ inq.id }}, this)">Mark read</button>{% endif %}
+                            </div>
+                            <div class="inq-message">{{ inq.message }}</div>
+                            <div class="inq-time">{{ inq.created_at }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <h3>
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Business Profile Summary
+                    </h3>
+                    <button class="btn-toggle-summary" onclick="toggleBusinessSummary(this)" aria-label="Toggle Business Profile Summary Details">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </div>
+                <div class="profile-card-body">
+                    <div class="bms-summary-slip collapsed" id="businessSummaryPanel">
+                        <div class="slip-row"><span class="slip-label">Business Title</span><span class="slip-value">{{ provider.business_name }}</span></div>
+                        <div class="slip-row"><span class="slip-label">Service Specialty</span><span class="slip-value">{{ provider.category }}</span></div>
+                        <div class="slip-row"><span class="slip-label">Service City</span><span class="slip-value">{{ provider.city }}</span></div>
+                        <div class="slip-row"><span class="slip-label">Area / Sector</span><span class="slip-value">{{ provider.area }}</span></div>
+                        <div class="slip-row"><span class="slip-label">Business Hotline</span><span class="slip-value">{{ provider.phone }}</span></div>
+                        <div class="slip-row"><span class="slip-label">Experience</span><span class="slip-value">{{ provider.experience or 'None stated' }}</span></div>
+                        <div class="slip-row block-row"><span class="slip-label">Specialties Description</span><span class="slip-value">{{ provider.description or 'No description stated yet.' }}</span></div>
+                        <div class="slip-row block-row"><span class="slip-label">Full Address</span><span class="slip-value">{{ provider.address or 'No address stated yet.' }}</span></div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="profile-card">
+                <div class="profile-card-body">
+                    <div class="empty-state-box">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="75" fill="#FFEDEA"/>
+                            <path d="M100 60v50M85 95l15 15 15-15" stroke="#FF4B3E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        </svg>
+                        <h4>Welcome, {{ user.name if user else 'User' }}!</h4>
+                        <p>Browse local service providers and connect with them directly. No middlemen, no hidden charges.</p>
+                        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                            <a href="{{ url_for('providers') }}" class="btn btn-primary btn-sm">Explore Services</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="profile-card">
+            <div class="profile-card-header">
+                <h3>
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Quick Settings
+                </h3>
+            </div>
+            <div class="profile-card-body">
+                <div class="quick-settings-grid">
+                    <a href="{{ url_for('edit_profile_page') }}" class="quick-settings-link">
+                        <div class="qs-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                        <div>
+                            <div class="qs-title">Personal Info</div>
+                            <div class="qs-sub">Name, email, phone</div>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('edit_profile_page') }}?tab=security" class="quick-settings-link">
+                        <div class="qs-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </div>
+                        <div>
+                            <div class="qs-title">Security</div>
+                            <div class="qs-sub">Change password</div>
+                        </div>
+                    </a>
+                    {% if session.account_type == 'provider' %}
+                    <a href="{{ url_for('edit_profile_page') }}?tab=business" class="quick-settings-link" style="grid-column: 1 / -1;">
+                        <div class="qs-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                        </div>
+                        <div>
+                            <div class="qs-title">Business Profile</div>
+                            <div class="qs-sub">Business details, category, location, description, photo</div>
+                        </div>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('logout') }}" class="btn btn-logout-highlight">Sign Out Account</a>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block page_script %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    function markRead(inquiryId, btn) {
+        fetch('{{ url_for("mark_inquiry_read_route", inquiry_id=0) }}'.replace('0', inquiryId), { method: 'POST' })
+        .then(function() {
+            var item = document.getElementById('inq-' + inquiryId);
+            if (item) item.classList.remove('unread');
+            if (btn) btn.remove();
+        });
+    }
+
+    function toggleBusinessSummary(btn) {
+        var summaryPanel = document.getElementById('businessSummaryPanel');
+        if (summaryPanel) {
+            summaryPanel.classList.toggle('collapsed');
+            btn.classList.toggle('expanded');
+        }
+    }
+
+    var isCurrentlySubscribed = {% if provider and provider.is_subscribed %}{{ provider.is_subscribed }}{% else %}0{% endif %};
+    var rawExpiryDateString = "{{ provider.subscription_expires_at if (provider and provider.subscription_expires_at) else '' }}";
+    var calculatedDaysRemaining = 0;
+
+    function renderSubscriptionTelemetry() {
+        var statusLabel = document.getElementById('subDaysLeft');
+        if (!statusLabel || !rawExpiryDateString) return;
+
+        var expiryTimestamp = Date.parse(rawExpiryDateString.replace(' ', 'T'));
+        if (isNaN(expiryTimestamp)) {
+            statusLabel.innerHTML = "Time Remaining: <strong>Active Status Enabled</strong>";
+            return;
+        }
+
+        var deltaMilliseconds = expiryTimestamp - Date.now();
+        calculatedDaysRemaining = Math.max(0, Math.ceil(deltaMilliseconds / (1000 * 60 * 60 * 24)));
+
+        if (deltaMilliseconds > 0) {
+            var hoursTotal = Math.floor(deltaMilliseconds / (1000 * 60 * 60));
+            var days = Math.floor(hoursTotal / 24);
+            var hours = hoursTotal % 24;
+            
+            statusLabel.innerHTML = "Time Remaining: <strong>" + days + " Days, " + hours + " Hours left</strong>";
+        } else {
+            statusLabel.innerHTML = "Time Remaining: <strong style='color:var(--red);'>Expired</strong>";
+        }
+    }
+
+    function paySubscriptionFee() {
+        if (isCurrentlySubscribed === 1 && calculatedDaysRemaining > 3) {
+            alert("Your premium service partner account status is already active with " + calculatedDaysRemaining + " days left. Early renewal unlocks when you have 3 or fewer days remaining.");
+            return;
+        }
+
+        var options = {
+            "key": "{{ razorpay_key_id }}",
+            "amount": "100", 
+            "currency": "INR",
+            "name": "PeopleConnect",
+            "description": "Monthly Service Partner Subscription Fee",
+            "image": "{{ logo_url }}",
+            "handler": function (response){
+                fetch('/api/subscription/verify', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ razorpay_payment_id: response.razorpay_payment_id })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    window.location.href = "{{ url_for('profile') }}";
+                });
+            },
+            "prefill": {
+                "name": "{{ user.name if user else '' }}",
+                "email": "{{ user.email if user else '' }}"
+            },
+            "theme": { "color": "#FF4B3E" }
+        };
+        var rzp1 = new Razorpay(options);
+        rzp1.open();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderSubscriptionTelemetry();
+        
+        {% if trigger_checkout == 'true' %}
+            paySubscriptionFee();
+        {% endif %}
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,229 @@
+<style>
+    .desktop-nav-bar {
+        display: none;
+        position: sticky;
+        top: 0;
+        z-index: 4000;
+        background: #FFFFFF;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .desktop-nav-container {
+        width: 100%;
+        padding: 0 48px;
+        height: 68px;
+        display: grid;
+        grid-template-columns: 240px 1fr auto;
+        align-items: center;
+        gap: 40px;
+    }
+
+    .logo-container { 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        height: 100%; 
+        text-decoration: none; 
+    }
+    .logo-img { 
+        height: 36px; 
+        width: auto; 
+        object-fit: contain; 
+    }
+    .logo-text { 
+        font-family: var(--font-display); 
+        font-size: 1.4rem; 
+        font-weight: 900; 
+        letter-spacing: -0.04em; 
+        color: var(--text); 
+    }
+
+    .desktop-middle-search {
+        max-width: 580px;
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        background: var(--border-light);
+        border: 1.5px solid transparent;
+        border-radius: var(--radius-full);
+        padding: 3px 16px;
+        transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .desktop-middle-search:focus-within { 
+        border-color: var(--primary); 
+        background: #FFFFFF; 
+        box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+
+    .desktop-middle-search input {
+        width: 100%;
+        padding: 9px 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text);
+        background: transparent;
+    }
+    .desktop-middle-search input::placeholder { color: var(--text-muted); }
+
+    .desktop-right-meta-actions { display: flex; align-items: center; gap: 26px; }
+
+    .desktop-nav-location {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text);
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: var(--radius-full);
+        transition: background 0.15s ease;
+    }
+    .desktop-nav-location:hover { background: var(--border-light); }
+    .desktop-nav-location svg { 
+        color: var(--primary); 
+        width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; 
+    }
+
+    .desktop-auth-links { display: flex; align-items: center; gap: 14px; }
+
+    .mobile-nav-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 68px;
+        background: rgba(255, 249, 245, 0.94);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -8px 30px rgba(20, 19, 31, 0.05);
+        z-index: 5000;
+        padding-bottom: env(safe-area-inset-bottom);
+        align-items: center;
+        justify-content: space-around;
+    }
+
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.72rem;
+        gap: 4px;
+        flex: 1;
+        height: 100%;
+        position: relative;
+        transition: color 0.15s ease;
+    }
+
+    .mobile-nav-item svg { 
+        width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.2; transition: transform 0.15s ease; 
+    }
+
+    .mobile-nav-item.active { color: var(--primary); font-weight: 800; }
+    .mobile-nav-item.active svg { stroke: var(--primary); transform: translateY(-2px); }
+    .mobile-nav-item.active::before {
+        content: '';
+        position: absolute;
+        top: 2px; width: 24px; height: 3px;
+        border-radius: var(--radius-full);
+        background: var(--primary-gradient);
+    }
+
+    .mobile-nav-badge {
+        position: absolute;
+        top: 4px;
+        right: calc(50% - 20px);
+        background: var(--primary);
+        color: #FFF;
+        font-size: 0.6rem;
+        font-weight: 800;
+        padding: 1px 5px;
+        border-radius: var(--radius-full);
+        min-width: 16px;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(255,75,62,0.4);
+    }
+
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .desktop-nav-bar { display: block; }
+        .mobile-nav-bar { display: none; }
+        .desktop-nav-container { padding: 0 24px; gap: 20px; grid-template-columns: 200px 1fr auto; }
+        .logo-text { font-size: 1.2rem; }
+        .desktop-middle-search { max-width: 400px; }
+        .desktop-right-meta-actions { gap: 16px; }
+        .desktop-nav-location { font-size: 0.82rem; padding: 4px 10px; }
+    }
+
+    /* ===== DESKTOP RESPONSIVE: 1025px+ ===== */
+    @media (min-width: 1025px) {
+        .desktop-nav-bar { display: block; }
+        .mobile-nav-bar { display: none; }
+    }
+</style>
+
+<nav class="desktop-nav-bar">
+    <div class="desktop-nav-container">
+        <a href="{{ url_for('index') }}" class="logo-container">
+            <img src="{{ logo_url }}" alt="PeopleConnect Network Logo" class="logo-img">
+            <span class="logo-text">PeopleConnect</span>
+        </a>
+
+        <div class="desktop-middle-search" id="desktop-search-wrapper">
+            <form action="{{ url_for('providers') }}" method="GET" style="display:flex; align-items:center; flex:1; gap:8px; width:100%;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--text-secondary); flex-shrink:0;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" name="search" placeholder="Search for categories, experts or specialists near you..." autocomplete="off">
+            </form>
+        </div>
+        
+        <div class="desktop-right-meta-actions">
+            <div class="desktop-nav-location" onclick="openLocationSelector()" title="Change Location">
+                <span class="pulse-dot"></span>
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"/></svg>
+                <span id="desktopDisplayLocationTitle">Locating...</span>
+            </div>
+
+            <div class="desktop-auth-links">
+                {% if not session.get('user_id') %}
+                    <a href="{{ url_for('auth') }}" class="btn btn-primary btn-sm">Sign In</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<nav class="mobile-nav-bar">
+    <a href="{{ url_for('index') }}" class="mobile-nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+    </a>
+    <a href="{{ url_for('providers') }}" class="mobile-nav-item {% if request.endpoint == 'providers' %}active{% endif %}">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search</span>
+    </a>
+    {% if session.get('user_id') %}
+        <a href="{{ url_for('favorites') }}" class="mobile-nav-item {% if request.endpoint == 'favorites' %}active{% endif %}">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span>Saved</span>
+        </a>
+        <a href="{{ url_for('profile') }}" class="mobile-nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+            <span>Profile</span>
+            {% if unread_count is defined and unread_count > 0 %}
+                <span class="mobile-nav-badge">{{ unread_count }}</span>
+            {% endif %}
+        </a>
+    {% else %}
+        <a href="{{ url_for('auth') }}" class="mobile-nav-item {% if request.endpoint == 'auth' %}active{% endif %}">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"/></svg>
+            <span>Account</span>
+        </a>
+    {% endif %}
+</nav>

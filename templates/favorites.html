@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Saved Bookmarks – PeopleConnect{% endblock %}
+
+{% block page_style %}
+<style>
+    .fav-page-header { margin-bottom: 14px; padding: 4px 2px 0 2px; }
+    .fav-page-header h1 { font-size: 1.65rem; font-weight: 800; letter-spacing: -0.04em; color: var(--text); line-height: 1.2; }
+    .fav-page-header p { font-size: 0.88rem; font-weight: 500; color: var(--text-secondary); margin-top: 3px; }
+
+    .fav-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 28px; }
+    
+    .fav-card { 
+        background: #FFFFFF; 
+        border: 1px solid var(--border-light); 
+        border-radius: var(--radius-lg); 
+        padding: 12px;
+        display: flex; 
+        gap: 12px; 
+        align-items: center; 
+        box-shadow: var(--shadow-premium); 
+        position: relative;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .fav-card .fav-card-img { 
+        width: 80px; 
+        height: 80px; 
+        border-radius: var(--radius-md);
+        background: var(--border-light); 
+        overflow: hidden; 
+        flex-shrink: 0;
+    }
+    .fav-card .fav-card-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    .fav-card .fav-remove { 
+        position: absolute; 
+        top: 10px; 
+        right: 10px; 
+        z-index: 10; 
+        background: var(--red-bg); 
+        border-radius: 50%; 
+        width: 28px; 
+        height: 28px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        cursor: pointer; 
+        border: none; 
+        transition: transform 0.2s ease;
+    }
+    .fav-card .fav-remove:active { transform: scale(0.9); }
+    .fav-card .fav-remove svg { width: 13px; height: 13px; fill: var(--red); stroke: var(--red); }
+
+    .fav-card .fav-card-info { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; padding-right: 24px; }
+    .fav-card .fav-card-info h3 { font-size: 1rem; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+    .fav-card .fav-card-info p { font-size: 0.82rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .provider-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+    }
+    .live-indicator-tag {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--green);
+        background: var(--green-bg);
+        padding: 1px 6px;
+        border-radius: var(--radius-sm);
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .fav-empty { 
+        grid-column: 1 / -1; 
+        text-align: center; 
+        padding: 50px 16px; 
+        background: #FFFFFF; 
+        border: 1.5px dashed var(--border); 
+        border-radius: var(--radius-lg); 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; 
+    }
+    .fav-empty .illustration-container { width: 140px; height: 140px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; }
+    .fav-empty svg { width: 100%; height: 100%; }
+    .fav-empty h4 { font-size: 1.15rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .fav-empty p { font-size: 0.88rem; color: var(--text-secondary); max-width: 320px; margin: 0 auto 20px; line-height: 1.5; }
+
+    /* ===== TABLET RESPONSIVE: 769px - 1024px ===== */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .fav-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .fav-card .fav-card-img { width: 72px; height: 72px; }
+    }
+
+    /* ===== DESKTOP RESPONSIVE: 1025px+ ===== */
+    @media (min-width: 1025px) {
+        .fav-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="fav-page-header">
+    <h1>Saved Bookmarks</h1>
+    <p>Service providers you've bookmarked for quick access</p>
+</header>
+
+<div class="fav-grid">
+    {% if providers %}
+        {% for p in providers %}
+            <a href="{{ url_for('provider_details', provider_id=p.id) }}" class="fav-card">
+                <div class="fav-card-img">
+                    {% if p.profile_image %}
+                        <img src="/uploads/{{ p.profile_image }}" alt="{{ p.business_name }}">
+                    {% else %}
+                        <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.6rem; border-radius:0;">
+                            {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
+                        </div>
+                    {% endif %}
+                </div>
+                <button class="fav-remove" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(this, {{ p.id }}); removeCard(this);" title="Remove from bookmarks">
+                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </button>
+                <div class="fav-card-info">
+                    <h3>{{ p.business_name }}</h3>
+                    <p>{{ p.category }} · {{ p.area }}</p>
+                    <div class="provider-meta-row">
+                        <span class="live-indicator-tag"><span class="pulse-dot"></span>Active</span>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    {% else %}
+        <div class="fav-empty">
+            <div class="illustration-container">
+                <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M25 80C20 50 50 35 90 35C150 35 185 65 175 110C165 150 120 160 85 155C45 150 30 110 25 80Z" fill="#F4F6F8"/>
+                    <circle cx="28" cy="85" r="8" fill="#E2E8F0"/>
+                    <path d="M50 45C50 42.2386 52.2386 40 55 40H145C147.761 40 150 42.2386 150 45V160C150 162.761 147.761 165 145 165H55C52.2386 165 50 162.761 50 160V45Z" fill="#FFFFFF"/>
+                    <path d="M50 155H140V165H55C52.2386 165 50 162.761 50 160V155Z" fill="#E2E8F0"/>
+                    <rect x="70" y="70" width="18" height="10" rx="5" fill="#CBD5E1"/>
+                    <rect x="94" y="72" width="46" height="6" rx="3" fill="#E2E8F0"/>
+                    <rect x="70" y="92" width="18" height="10" rx="5" fill="#CBD5E1"/>
+                    <rect x="94" y="94" width="54" height="6" rx="3" fill="#E2E8F0"/>
+                    <rect x="70" y="114" width="18" height="10" rx="5" fill="#CBD5E1"/>
+                    <rect x="94" y="116" width="38" height="6" rx="3" fill="#E2E8F0"/>
+                    <rect x="70" y="136" width="18" height="10" rx="5" fill="#CBD5E1"/>
+                    <rect x="94" y="138" width="48" height="6" rx="3" fill="#E2E8F0"/>
+                    <path d="M140 40C140 48.2843 146.716 55 155 45C158 41 154 30 148 32C143 33 140 36 140 40Z" fill="#CBD5E1"/>
+                    <path d="M140 70C123 52 101 76 116 98C127 112 140 125 144 128C145 129 147 129 148 128C152 125 165 112 176 98C191 76 169 52 152 70L146 76L140 70Z" fill="#CBD5E1"/>
+                </svg>
+            </div>
+            <h4>No bookmarked specialists yet</h4>
+            <p>Tap the heart icon on any provider's card to save them here for quick access later.</p>
+            <a href="{{ url_for('providers') }}" class="btn btn-primary btn-sm">Browse Services</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block page_script %}
+<script>
+    function removeCard(btn) {
+        var card = btn.closest('.fav-card');
+        card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        setTimeout(function() {
+            card.remove();
+            var grid = document.querySelector('.fav-grid');
+            if (grid && grid.querySelectorAll('.fav-card').length === 0) {
+                grid.innerHTML = `
+                    <div class="fav-empty">
+                        <div class="illustration-container">
+                            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M25 80C20 50 50 35 90 35C150 35 185 65 175 110C165 150 120 160 85 155C45 150 30 110 25 80Z" fill="#F4F6F8"/>
+                                <circle cx="28" cy="85" r="8" fill="#E2E8F0"/>
+                                <path d="M50 45C50 42.2386 52.2386 40 55 40H145C147.761 40 150 42.2386 150 45V160C150 162.761 147.761 165 145 165H55C52.2386 165 50 162.761 50 160V45Z" fill="#FFFFFF"/>
+                                <path d="M50 155H140V165H55C52.2386 165 50 162.761 50 160V155Z" fill="#E2E8F0"/>
+                                <rect x="70" y="70" width="18" height="10" rx="5" fill="#CBD5E1"/>
+                                <rect x="94" y="72" width="46" height="6" rx="3" fill="#E2E8F0"/>
+                                <rect x="70" y="92" width="18" height="10" rx="5" fill="#CBD5E1"/>
+                                <rect x="94" y="94" width="54" height="6" rx="3" fill="#E2E8F0"/>
+                                <rect x="70" y="114" width="18" height="10" rx="5" fill="#CBD5E1"/>
+                                <rect x="94" y="116" width="38" height="6" rx="3" fill="#E2E8F0"/>
+                                <rect x="70" y="136" width="18" height="10" rx="5" fill="#CBD5E1"/>
+                                <rect x="94" y="138" width="48" height="6" rx="3" fill="#E2E8F0"/>
+                                <path d="M140 40C140 48.2843 146.716 55 155 45C158 41 154 30 148 32C143 33 140 36 140 40Z" fill="#CBD5E1"/>
+                                <path d="M140 70C123 52 101 76 116 98C127 112 140 125 144 128C145 129 147 129 148 128C152 125 165 112 176 98C191 76 169 52 152 70L146 76L140 70Z" fill="#CBD5E1"/>
+                            </svg>
+                        </div>
+                        <h4>No bookmarked specialists yet</h4>
+                        <p>Tap the heart icon on any provider's card to save them here for quick access later.</p>
+                        <a href="${ '{{ url_for("providers") }}' }" class="btn btn-primary btn-sm">Browse Services</a>
+                    </div>`;
+            }
+        }, 250);
+    }
+</script>
+{% endblock %}
