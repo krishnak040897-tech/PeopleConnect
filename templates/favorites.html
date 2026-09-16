@@ -117,9 +117,10 @@
             <a href="{{ url_for('provider_details', provider_id=p.id) }}" class="fav-card">
                 <div class="fav-card-img">
                     {% if p.profile_image %}
-                        <img src="/uploads/{{ p.profile_image }}" alt="{{ p.business_name }}">
+                        <!-- FIX: Conditional check for Cloudinary HTTP URLs vs local /uploads/ paths -->
+                        <img src="{% if p.profile_image.startswith('http') %}{{ p.profile_image }}{% else %}/uploads/{{ p.profile_image }}{% endif %}" alt="{{ p.business_name }}">
                     {% else %}
-                        <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.6rem; border-radius:0;">
+                        <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.6rem; border-radius:0; display:flex; align-items:center; justify-content:center; background:var(--border-light); color:var(--text-secondary);">
                             {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
                         </div>
                     {% endif %}
@@ -166,6 +167,22 @@
 
 {% block page_script %}
 <script>
+    // FIX: Added missing toggleFavorite function to prevent JS errors on click
+    function toggleFavorite(btn, providerId) {
+        fetch('/toggle-favorite', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'provider_id=' + providerId
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Toggled favorite:', data);
+        })
+        .catch(error => console.error('Error toggling favorite:', error));
+    }
+
     function removeCard(btn) {
         var card = btn.closest('.fav-card');
         card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
@@ -175,6 +192,7 @@
             card.remove();
             var grid = document.querySelector('.fav-grid');
             if (grid && grid.querySelectorAll('.fav-card').length === 0) {
+                // Jinja2 will render the URL correctly inside the template literal
                 grid.innerHTML = `
                     <div class="fav-empty">
                         <div class="illustration-container">
@@ -197,7 +215,7 @@
                         </div>
                         <h4>No bookmarked specialists yet</h4>
                         <p>Tap the heart icon on any provider's card to save them here for quick access later.</p>
-                        <a href="${ '{{ url_for("providers") }}' }" class="btn btn-primary btn-sm">Browse Services</a>
+                        <a href="{{ url_for('providers') }}" class="btn btn-primary btn-sm">Browse Services</a>
                     </div>`;
             }
         }, 250);
