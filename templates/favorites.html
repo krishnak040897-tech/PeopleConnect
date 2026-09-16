@@ -117,8 +117,13 @@
             <a href="{{ url_for('provider_details', provider_id=p.id) }}" class="fav-card">
                 <div class="fav-card-img">
                     {% if p.profile_image %}
-                        <!-- CHANGED: Use url_for to handle both Cloudinary URLs and local files -->
-                        <img src="{{ url_for('uploaded_file', filename=p.profile_image) }}" alt="{{ p.business_name }}">
+                        {% if p.profile_image[:4] == 'http' %}
+                            <!-- Display Cloudinary URL directly -->
+                            <img src="{{ p.profile_image }}" alt="{{ p.business_name }}">
+                        {% else %}
+                            <!-- Display local file via route -->
+                            <img src="{{ url_for('uploaded_file', filename=p.profile_image) }}" alt="{{ p.business_name }}">
+                        {% endif %}
                     {% else %}
                         <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.6rem; border-radius:0;">
                             {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
