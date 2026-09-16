@@ -202,7 +202,7 @@
     }
     .featured-fluid-card .card-fav-btn svg { width: 15px; height: 15px; stroke-width: 2.5; }
     .featured-fluid-card .floating-rating-badge {
-        position: absolute; top: 10px; left: 10px; background: rgba(255, 255, 255, 0.96); padding: 3px 8px;
+        position: absolute; top: 10px; left: 10px; background: rgba(255, 255,255, 0.96); padding: 3px 8px;
         border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 800; color: var(--text);
         display: flex; align-items: center; gap: 3px; box-shadow: 0 4px 10px rgba(20,19,31,0.1); z-index: 10;
     }
@@ -301,7 +301,7 @@
     .detect-location-action:active { transform: scale(0.98); background: #FFE0DB; }
     .detect-left { display: flex; align-items: center; gap: 14px; }
     .detect-icon-box {
-        width: 40px; height: 40px; background: #FFFFFF; border-radius: 50%;
+        width: 40px; height: 40px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center; color: var(--primary);
         box-shadow: 0 4px 12px var(--primary-glow);
     }
@@ -555,7 +555,8 @@
             <a href="{{ url_for('provider_details', provider_id=p.id) }}" class="featured-fluid-card target-distance-card" data-address="{{ p.address or '' }} {{ p.area or '' }} {{ p.city or '' }}">
                 <div class="card-media-photo">
                     {% if p.profile_image %}
-                        <img src="/uploads/{{ p.profile_image }}" alt="{{ p.business_name }}">
+                        <!-- UPDATED IMAGE SOURCE LOGIC -->
+                        <img src="{{ p.profile_image if p.profile_image.startswith('http') else '/uploads/' + (p.profile_image or '') }}" alt="{{ p.business_name }}">
                     {% else %}
                         <div class="avatar-placeholder" style="width:100%; height:100%; font-size:2.5rem; border-radius:0;">
                             {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
@@ -563,7 +564,7 @@
                     {% endif %}
                     {% if session.get('user_id') %}
                     <button class="card-fav-btn" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(this, {{ p.id }})" title="Add to favorites">
-                        <svg class="heart-icon" viewBox="0 0 24 24" fill="{% if p.id in favorite_ids %}var(--red){% else %}none{% endif %}" stroke="{% if p.id in favorite_ids %}var(--red){% else %}currentColor{% endif %}"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        <svg class="heart-icon" viewBox="0 0 24 24" fill="{% if p.id in favorite_ids %}var(--red){% else %}none{% endif %}" stroke="{% if p.id in favorite_ids %}var(--red){% else %}currentColor{% endif %}"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0-7.78z"/></svg>
                     </button>
                     {% endif %}
                     <div class="floating-rating-badge">
@@ -619,7 +620,8 @@
             <a href="{{ url_for('provider_details', provider_id=p.id) }}" class="nearby-split-card target-distance-card" data-address="{{ p.address or '' }} {{ p.area or '' }} {{ p.city or '' }}">
                 <div class="thumbnail-box">
                     {% if p.profile_image %}
-                        <img src="/uploads/{{ p.profile_image }}" alt="{{ p.business_name }}">
+                        <!-- UPDATED IMAGE SOURCE LOGIC -->
+                        <img src="{{ p.profile_image if p.profile_image.startswith('http') else '/uploads/' + (p.profile_image or '') }}" alt="{{ p.business_name }}">
                     {% else %}
                         <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.5rem; border-radius:0;">
                             {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
@@ -662,7 +664,7 @@
                     <circle cx="100" cy="100" r="75" fill="#F5F1EC" opacity="0.8"/>
                     <circle cx="100" cy="100" r="55" fill="none" stroke="#EDE7E1" stroke-width="2"/>
                     <g transform="translate(100,95) scale(1.3)">
-                        <path d="M0-18 C-12-18 -12-6 0 10 C12-6 12-18 0-18 z" fill="var(--primary)"/>
+                        <path d="M0-18 C-12-18 -12-6 0 10 C12-6 12-18 6 0 10 C12-6 12-18 0-18 z" fill="var(--primary)"/>
                         <circle cx="0" cy="-10" r="4" fill="#FFFFFF"/>
                     </g>
                 </svg>
@@ -899,159 +901,96 @@
 
             data.features.forEach(feat => {
                 const props = feat.properties;
-                const placeName = props.name || props.address_line1 || "Specified Zone";
-                const placeDetail = props.address_line2 || props.formatted || "Telangana, India";
-                const isLandmark = props.categories && (props.categories.includes('tourism') || props.categories.includes('building'));
-
-                const compositeCardHtml = `
-                    <div class="location-option-item" onclick="selectPresetLocation('${placeName.replace(/'/g, "\\'")}', '${placeDetail.replace(/'/g, "\\'")}', '${props.lat}', '${props.lon}')">
-                        <div class="location-radio-pin">
-                            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                        </div>
-                        <div class="loc-info">
-                            <h5>${placeName}</h5>
-                            <p>${placeDetail}</p>
-                        </div>
-                    </div>
-                `;
-
-                if (isLandmark) {
-                    landmarkSightsHtml += compositeCardHtml;
-                    landmarkCount++;
-                } else {
-                    localAreasHtml += compositeCardHtml;
+                const pl = feat.properties;
+                
+                // Geocoding Logic Refinement for robustness
+                var category = feat.properties.categories && feat.properties.categories[0];
+                
+                if (category && category.includes('neighbourhood') || category.includes('suburb') || category.includes('city') || category.includes('town')) {
+                    var bizLat = props.lat;
+                    var bizLon = props.lon;
+                    var dist = calculateHairsineDistanceInKm(currentUserLat, currentUserLon, bizLat, bizLon);
+                    var formattedAddress = `${pl.locality || ''}, ${pl.city || ''}`; // Basic formatting
+                    
+                    localAreasHtml += `
+                        <div class="location-option-item" onclick="selectPresetLocation('${formattedAddress}', '${formattedAddress}', ${bizLat}, ${bizLon})">
+                            <div class="location-radio-pin">
+                                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            </div>
+                            <div class="loc-info">
+                                <h5>${pl.name || formattedAddress}</h5>
+                                <p>${dist.toFixed(1)} km away</p>
+                            </div>
+                        </div>`;
                     localCount++;
+                }
+                
+                if (category && category.includes('tourism.sights')) {
+                    landmarkSightsHtml += `
+                        <div class="location-option-item" onclick="selectPresetLocation('${pl.name || 'Sight'}', '${pl.formatted || pl.address || ''}', ${pl.lat}, ${pl.lon})">
+                            <div class="location-radio-pin">
+                                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            </div>
+                            <div class="loc-info">
+                                <h5>${pl.name || 'Landmark'}</h5>
+                                <p>${pl.formatted || pl.address || 'Nearby Landmark'}</p>
+                            </div>
+                        </div>`;
+                    landmarkCount++;
                 }
             });
 
-            illustrationBox.innerHTML = "";
-            
             if (localCount > 0) {
-                localityTarget.innerHTML = localAreasHtml;
                 segmentLocality.style.display = "flex";
+                localityTarget.innerHTML = localAreasHtml;
             }
+            
             if (landmarkCount > 0) {
-                landmarkTarget.innerHTML = landmarkSightsHtml;
                 segmentLandmark.style.display = "flex";
+                landmarkTarget.innerHTML = landmarkSightsHtml;
             }
+            
+            if (localCount === 0 && landmarkCount === 0) {
+                illustrationBox.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); padding:15px 0; text-align:center;">No component zones discovered inside this map grid sector.</p>`;
+            } else {
+                illustrationBox.style.display = "none";
+            }
+
         } catch (err) {
-            console.error(err);
-            illustrationBox.innerHTML = `<p style="font-size:0.85rem; color:var(--red); padding:15px 0; text-align:center;">Directory streaming interrupted.</p>`;
+            illustrationBox.innerHTML = `<p style="color:var(--red);">Error fetching location data.</p>`;
         }
     }
 
-    // --- Reverse Geocoding Map Tracker ---
+    // --- Real-time GPS Logic ---
     function executeLiveLocationDetection() {
-        var statusText = document.getElementById('detectStatusText');
-        var titleText = document.getElementById('detectTitleText');
-        var radarIcon = document.getElementById('satelliteAnimationRadarIcon');
-        
-        if (statusText) statusText.innerText = "Syncing satellite telemetry lines...";
-        if (titleText) titleText.innerText = "Locking GPS Coordinates...";
-        if (radarIcon) radarIcon.classList.add('pulse-satellite');
-
         if (!navigator.geolocation) {
-            if (statusText) statusText.innerText = "Tracking module missing on system browser.";
-            if (radarIcon) radarIcon.classList.remove('pulse-satellite');
-            executeGracefulDefaultFallback();
+            alert("Geolocation is not supported by your browser.");
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(async function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const reverseGeocodeUrl = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=${GEOAPIFY_API_KEY}`;
-
-            try {
-                const response = await fetch(reverseGeocodeUrl);
-                const data = await response.json();
+        const detectBtnText = document.getElementById('detectStatusText');
+        const detectTitle = document.getElementById('detectTitleText');
+        
+        if (detectBtnText) detectBtnText.innerText = "Locating...";
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                currentUserLat = position.coords.latitude;
+                currentUserLon = position.coords.longitude;
                 
-                if (data.features && data.features.length > 0) {
-                    const properties = data.features[0].properties;
-                    const cleanLocalityName = properties.suburb || properties.neighbourhood || properties.city || "Live GPS Location";
-                    const fullyFormattedAddress = properties.formatted || "Coordinates Verified";
-                    
-                    if (statusText) statusText.innerText = "Mapping grid verified!";
-                    if (titleText) titleText.innerText = "Detect Current Location";
-                    if (radarIcon) radarIcon.classList.remove('pulse-satellite');
-                    
-                    selectPresetLocation(cleanLocalityName, fullyFormattedAddress, lat, lon);
-                    fetchNearbyTownsAndSights(lat, lon);
-                } else {
-                    executeGracefulDefaultFallback();
-                }
-            } catch (error) {
-                console.error(error);
-                executeGracefulDefaultFallback();
-            }
-        }, function(error) {
-            executeGracefulDefaultFallback();
-        }, { enableHighAccuracy: true, timeout: 9000 });
+                selectPresetLocation(
+                    "Current Location", 
+                    "Based on GPS",
+                    currentUserLat,
+                    currentUserLon
+                );
+            },
+            (error) => {
+                if (detectTitleText) detectTitleText.innerText = "Failed to detect.";
+                if (detectBtnText) detectBtnText.style.color = "var(--red)";
+            },
+            { timeout: 10000 }
+        );
     }
-
-    // --- Forward Boundary Query parsing ---
-    async function executeTextCityGeocodeSearch(queryText) {
-        const statusText = document.getElementById('detectStatusText');
-        if (statusText) statusText.innerText = "Resolving textual address matching indexes...";
-
-        const forwardGeocodeUrl = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(queryText)}&limit=1&apiKey=${GEOAPIFY_API_KEY}`;
-
-        try {
-            const response = await fetch(forwardGeocodeUrl);
-            const data = await response.json();
-
-            if (data.features && data.features.length > 0) {
-                const featureProps = data.features[0].properties;
-                const targetLat = featureProps.lat;
-                const targetLon = featureProps.lon;
-                
-                if (statusText) statusText.innerText = "Data nodes structured correctly.";
-                fetchNearbyTownsAndSights(targetLat, targetLon);
-            } else {
-                if (statusText) statusText.innerText = "Zero boundary nodes matched.";
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    // --- Fallback handling pipeline ---
-    function executeGracefulDefaultFallback() {
-        var statusText = document.getElementById('detectStatusText');
-        var titleText = document.getElementById('detectTitleText');
-        var radarIcon = document.getElementById('satelliteAnimationRadarIcon');
-        
-        if (statusText) statusText.innerText = "Using default regional index parameters.";
-        if (titleText) titleText.innerText = "Detect Current Location";
-        if (radarIcon) radarIcon.classList.remove('pulse-satellite');
-        
-        selectPresetLocation("Nizamabad", "Subhash Nagar Center, Telangana, India", 18.6725, 78.0941);
-        fetchNearbyTownsAndSights(18.6725, 78.0941);
-    }
-
-    // --- Dynamic DOM State Initializer ---
-    document.addEventListener("DOMContentLoaded", function() {
-        var cachedTitle = localStorage.getItem('user_selected_loc_title');
-        var cachedDetail = localStorage.getItem('user_selected_loc_detail');
-        var cachedLat = localStorage.getItem('user_selected_loc_lat');
-        var cachedLon = localStorage.getItem('user_selected_loc_lon');
-        
-        var desktopTitle = document.getElementById('desktopDisplayLocationTitle');
-        var mobileTitle = document.getElementById('displayLocationTitle');
-        var mobileDetail = document.getElementById('displayLocationDetail');
-        
-        if (cachedTitle && cachedDetail) {
-            if (mobileTitle) mobileTitle.innerText = cachedTitle;
-            if (mobileDetail) mobileDetail.innerText = cachedDetail;
-            if (desktopTitle) desktopTitle.innerText = cachedTitle;
-            if (cachedLat && cachedLon) {
-                currentUserLat = parseFloat(cachedLat);
-                currentUserLon = parseFloat(cachedLon);
-                recalculateAndSortAllListingDistances();
-            }
-        } else {
-            executeLiveLocationDetection();
-        }
-    });
 </script>
 {% endblock %}
