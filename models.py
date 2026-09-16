@@ -31,6 +31,7 @@ def create_tables():
     ''')
 
     # Providers Table
+    # Added profile_image_public_id for Cloudinary deletion capability
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS providers (
             id SERIAL PRIMARY KEY,
@@ -55,6 +56,7 @@ def create_tables():
     ''')
 
     # Provider Images Table
+    # Added public_id for Cloudinary deletion capability
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS provider_images (
             id SERIAL PRIMARY KEY,
@@ -128,17 +130,21 @@ def migrate_tables():
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    # Helper to safely add columns
     def add_column(table, column, definition):
         try:
             cursor.execute(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {definition}')
             conn.commit()
         except psycopg2.Error:
-            pass
+            pass # Ignore errors if column already exists
 
+    # Backward compatibility for views
     add_column('providers', 'views', 'INTEGER DEFAULT 0')
     add_column('providers', 'is_subscribed', 'INTEGER DEFAULT 0')
     add_column('providers', 'subscription_expires_at', 'TIMESTAMP')
     add_column('providers', 'subscription_started_at', 'TIMESTAMP')
+    
+    # New columns for Cloudinary
     add_column('providers', 'profile_image_public_id', 'TEXT')
     add_column('provider_images', 'public_id', 'TEXT')
 
@@ -157,6 +163,7 @@ def insert_default_categories():
     conn = get_db_connection()
     cursor = conn.cursor()
     for cat in categories:
+        # PostgreSQL uses ON CONFLICT instead of INSERT OR IGNORE
         cursor.execute('''
             INSERT INTO categories (category_name) VALUES (%s) 
             ON CONFLICT (category_name) DO NOTHING
@@ -249,10 +256,14 @@ def delete_user_account(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        # Foreign key constraints usually handle cascading deletes if set up,
+        # but manual deletion ensures everything goes if constraints are not ON DELETE CASCADE
         cursor.execute('SELECT id FROM providers WHERE user_id = %s', (user_id,))
         provider = cursor.fetchone()
         if provider:
             provider_id = provider['id']
+            # Note: Actual Cloudinary images deletion should happen in app.py or via a trigger logic hook,
+            # here we are just removing DB records.
             cursor.execute('DELETE FROM provider_images WHERE provider_id = %s', (provider_id,))
             cursor.execute('DELETE FROM reviews WHERE provider_id = %s', (provider_id,))
             cursor.execute('DELETE FROM inquiries WHERE provider_id = %s', (provider_id,))
@@ -288,6 +299,7 @@ def create_provider(user_id, business_name, category, experience, description, c
     provider_id = cursor.fetchone()['id']
 
     if business_images:
+        # business_images is expected to be a list of tuples: (url, public_id)
         for idx, (img_path, public_id) in enumerate(business_images):
             cursor.execute('''
                 INSERT INTO provider_images (provider_id, image_path, public_id, sort_order) 
@@ -315,6 +327,7 @@ def update_provider(user_id, business_name, category, experience, description, c
 def activate_provider_subscription(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
+    # PostgreSQL uses NOW() or CURRENT_TIMESTAMP
     cursor.execute('''
         UPDATE providers 
         SET is_subscribed = 1, 
@@ -385,6 +398,7 @@ def delete_provider_image(image_id, provider_user_id=None):
     else:
         cursor.execute('DELETE FROM provider_images WHERE id = %s RETURNING public_id', (image_id,))
     
+    # Return the public_id so the app can delete from Cloudinary
     row = cursor.fetchone()
     public_id = row['public_id'] if row else None
     
@@ -449,7 +463,7 @@ def get_all_providers(category=None, limit=None, offset=0, sort='newest'):
         JOIN users u ON p.user_id = u.id
         LEFT JOIN reviews r ON p.id = r.provider_id
         {where_clause}
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
         {order_clause}{limit_clause}
     '''
     cursor.execute(query, params)
@@ -469,7 +483,7 @@ def get_recent_providers(limit=8):
         JOIN users u ON p.user_id = u.id 
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE p.is_subscribed = 1 
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
         ORDER BY p.created_at DESC LIMIT %s
     ''', (limit,))
     providers = cursor.fetchall()
@@ -488,7 +502,7 @@ def get_provider_by_id(provider_id):
         JOIN users u ON p.user_id = u.id 
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE p.id = %s
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
     ''', (provider_id,))
     provider = cursor.fetchone()
     conn.close()
@@ -506,7 +520,7 @@ def get_provider_by_user_id(user_id):
         JOIN users u ON p.user_id = u.id
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE p.user_id = %s
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
     ''', (user_id,))
     provider = cursor.fetchone()
     conn.close()
@@ -528,6 +542,7 @@ def search_providers(query, limit=None, offset=0, sort='newest'):
         order_clause = " ORDER BY p.created_at DESC"
         
     limit_clause = ""
+    # Postgres uses %s for placeholders
     params = [term, term, term, term, term]
     if limit is not None:
         limit_clause = " LIMIT %s OFFSET %s"
@@ -541,7 +556,7 @@ def search_providers(query, limit=None, offset=0, sort='newest'):
         JOIN users u ON p.user_id = u.id
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE p.is_subscribed = 1 AND (p.business_name LIKE %s OR u.name LIKE %s OR p.category LIKE %s OR p.city LIKE %s OR p.area LIKE %s)
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
         {order_clause}{limit_clause}
     ''', params)
     providers = cursor.fetchall()
@@ -628,7 +643,6 @@ def is_favorited(user_id, provider_id):
 def get_user_favorites(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    # FIX: Added f.created_at to GROUP BY to prevent PostgreSQL 500 Internal Server Error
     cursor.execute('''
         SELECT p.*, u.name AS owner_name, u.email AS owner_email,
                COALESCE(AVG(r.rating), 0.0) AS avg_rating,
@@ -638,7 +652,7 @@ def get_user_favorites(user_id):
         JOIN users u ON p.user_id = u.id
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE f.user_id = %s AND p.is_subscribed = 1 
-        GROUP BY p.id, f.created_at
+        GROUP BY p.id, u.name, u.email
         ORDER BY f.created_at DESC
     ''', (user_id,))
     providers = cursor.fetchall()
