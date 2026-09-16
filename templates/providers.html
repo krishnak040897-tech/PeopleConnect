@@ -4,7 +4,7 @@
 
 {% block page_style %}
 <style>
-    /* --- Layout Header Context --- */
+    /* ... (All your existing CSS remains the same) ... */
     .providers-view-header {
         margin-bottom: 20px;
         padding: 4px 2px;
@@ -322,7 +322,8 @@
                 <a href="{{ url_for('provider_details', provider_id=p.id) }}" style="display: contents;">
                     <div class="card-thumb-frame">
                         {% if p.profile_image %}
-                            <img src="/uploads/{{ p.profile_image }}" alt="{{ p.business_name }}">
+                            <!-- UPDATED IMAGE SOURCE LOGIC -->
+                            <img src="{{ p.profile_image if p.profile_image.startswith('http') else '/uploads/' + p.profile_image }}" alt="{{ p.business_name }}">
                         {% else %}
                             <div class="avatar-placeholder" style="width:100%; height:100%; font-size:2rem; border-radius:0;">
                                 {{ p.owner_name[0]|upper if p.owner_name else 'P' }}
