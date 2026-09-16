@@ -516,7 +516,7 @@
             <div class="profile-image-upload-zone">
                 <div class="profile-image-preview-circle" id="image-preview-circle">
                     {% if provider.profile_image %}
-                        <img src="/uploads/{{ provider.profile_image }}" alt="Profile" id="profile-preview-img">
+                        <img src="{% if provider.profile_image.startswith('http') %}{{ provider.profile_image }}{% else %}/uploads/{{ provider.profile_image }}{% endif %}" alt="Profile" id="profile-preview-img">
                     {% else %}
                         <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.4rem; border-radius:50%;">
                             {{ user.name[0]|upper if user and user.name else 'P' }}
@@ -632,7 +632,7 @@
         <div class="biz-images-current-grid" id="bizImagesCurrentGrid">
             {% for img in business_images %}
             <div class="biz-img-manage-item" id="bizImgItem_{{ img.id }}">
-                <img src="/uploads/{{ img.image_path }}" alt="Business image">
+                <img src="{% if img.image_path.startswith('http') %}{{ img.image_path }}{% else %}/uploads/{{ img.image_path }}{% endif %}" alt="Business image">
                 <button type="button" class="del-img-btn" onclick="deleteBizImage({{ img.id }}, this)" title="Delete this image">&times;</button>
             </div>
             {% endfor %}
