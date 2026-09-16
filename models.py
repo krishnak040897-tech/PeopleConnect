@@ -136,7 +136,7 @@ def migrate_tables():
             cursor.execute(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {definition}')
             conn.commit()
         except psycopg2.Error:
-            pass # Ignore errors if column already exists or other issues
+            pass # Ignore errors if column already exists
 
     # Backward compatibility for views
     add_column('providers', 'views', 'INTEGER DEFAULT 0')
@@ -463,7 +463,7 @@ def get_all_providers(category=None, limit=None, offset=0, sort='newest'):
         JOIN users u ON p.user_id = u.id
         LEFT JOIN reviews r ON p.id = r.provider_id
         {where_clause}
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
         {order_clause}{limit_clause}
     '''
     cursor.execute(query, params)
@@ -483,7 +483,7 @@ def get_recent_providers(limit=8):
         JOIN users u ON p.user_id = u.id 
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE p.is_subscribed = 1 
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
         ORDER BY p.created_at DESC LIMIT %s
     ''', (limit,))
     providers = cursor.fetchall()
@@ -502,7 +502,7 @@ def get_provider_by_id(provider_id):
         JOIN users u ON p.user_id = u.id 
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE p.id = %s
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
     ''', (provider_id,))
     provider = cursor.fetchone()
     conn.close()
@@ -520,7 +520,7 @@ def get_provider_by_user_id(user_id):
         JOIN users u ON p.user_id = u.id
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE p.user_id = %s
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
     ''', (user_id,))
     provider = cursor.fetchone()
     conn.close()
@@ -556,7 +556,7 @@ def search_providers(query, limit=None, offset=0, sort='newest'):
         JOIN users u ON p.user_id = u.id
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE p.is_subscribed = 1 AND (p.business_name LIKE %s OR u.name LIKE %s OR p.category LIKE %s OR p.city LIKE %s OR p.area LIKE %s)
-        GROUP BY p.id
+        GROUP BY p.id, u.name, u.email
         {order_clause}{limit_clause}
     ''', params)
     providers = cursor.fetchall()
@@ -652,8 +652,8 @@ def get_user_favorites(user_id):
         JOIN users u ON p.user_id = u.id
         LEFT JOIN reviews r ON p.id = r.provider_id
         WHERE f.user_id = %s AND p.is_subscribed = 1 
-        GROUP BY p.id
-        ORDER BY MAX(f.created_at) DESC
+        GROUP BY p.id, u.name, u.email
+        ORDER BY f.created_at DESC
     ''', (user_id,))
     providers = cursor.fetchall()
     conn.close()
