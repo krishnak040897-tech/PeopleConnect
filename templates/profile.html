@@ -181,18 +181,24 @@
 
     .profile-card-body { padding: 14px 18px; }
 
+    /* ===== FIXED: Smooth business summary toggle ===== */
     .bms-summary-slip { 
         display: flex; 
         flex-direction: column; 
         background: #FFFFFF; 
-        transition: max-height 0.3s ease-in-out, opacity 0.2s ease;
-        opacity: 1;
+        max-height: 0;
+        opacity: 0;
         overflow: hidden;
+        transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.25s ease;
+        padding-top: 0;
+        padding-bottom: 0;
     }
     
-    .bms-summary-slip.collapsed {
-        display: none;
-        opacity: 0;
+    .bms-summary-slip.expanded {
+        max-height: 1200px;
+        opacity: 1;
+        padding-top: 4px;
+        padding-bottom: 4px;
     }
 
     .btn-toggle-summary {
@@ -433,10 +439,9 @@
         <div class="panel-avatar-row">
             <div class="panel-avatar-circle">
                 {% if session.account_type == 'provider' and provider and provider.profile_image %}
-                    <!-- UPDATED IMAGE SOURCE LOGIC -->
                     <img src="{{ provider.profile_image if provider.profile_image.startswith('http') else '/uploads/' + (provider.profile_image or '') }}" alt="Profile">
                 {% else %}
-                    <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.3rem; border-radius:50%;">
+                    <div class="avatar-placeholder" style="width:100%; height:100%; font-size:1.3rem; border-radius:50%; display:flex; align-items:center; justify-content:center; background: var(--primary-light); color: var(--primary);">
                         {{ user.name[0]|upper if user and user.name else 'P' }}
                     </div>
                 {% endif %}
@@ -558,12 +563,12 @@
                         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         Business Profile Summary
                     </h3>
-                    <button class="btn-toggle-summary" onclick="toggleBusinessSummary(this)" aria-label="Toggle Business Profile Summary Details">
+                    <button class="btn-toggle-summary" id="bizSummaryToggleBtn" onclick="toggleBusinessSummary(this)" aria-label="Toggle Business Profile Summary Details" aria-expanded="false">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                 </div>
                 <div class="profile-card-body">
-                    <div class="bms-summary-slip collapsed" id="businessSummaryPanel">
+                    <div class="bms-summary-slip" id="businessSummaryPanel">
                         <div class="slip-row"><span class="slip-label">Business Title</span><span class="slip-value">{{ provider.business_name }}</span></div>
                         <div class="slip-row"><span class="slip-label">Service Specialty</span><span class="slip-value">{{ provider.category }}</span></div>
                         <div class="slip-row"><span class="slip-label">Service City</span><span class="slip-value">{{ provider.city }}</span></div>
@@ -644,23 +649,43 @@
 {% block page_script %}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+    // ====================================================================
+    // FIX 1: markRead function — properly defined and accessible globally
+    // ====================================================================
     function markRead(inquiryId, btn) {
-        fetch('{{ url_for("mark_inquiry_read_route", inquiry_id=0) }}'.replace('0', inquiryId), { method: 'POST' })
-        .then(function() {
+        fetch('{{ url_for("mark_inquiry_read_route", inquiry_id=0) }}'.replace('0', inquiryId), { 
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('Network response was not ok');
             var item = document.getElementById('inq-' + inquiryId);
             if (item) item.classList.remove('unread');
             if (btn) btn.remove();
+        })
+        .catch(function(err) {
+            console.error('Mark read failed:', err);
+            alert('Failed to mark inquiry as read. Please try again.');
         });
     }
 
+    // ====================================================================
+    // FIX 2: toggleBusinessSummary — smooth, reliable toggle for the arrow
+    // ====================================================================
     function toggleBusinessSummary(btn) {
         var summaryPanel = document.getElementById('businessSummaryPanel');
-        if (summaryPanel) {
-            summaryPanel.classList.toggle('collapsed');
-            btn.classList.toggle('expanded');
+        if (!summaryPanel) return;
+
+        var isExpanded = summaryPanel.classList.toggle('expanded');
+        if (btn) {
+            btn.classList.toggle('expanded', isExpanded);
+            btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
         }
     }
 
+    // ====================================================================
+    // Subscription telemetry — display remaining days
+    // ====================================================================
     var isCurrentlySubscribed = {% if provider and provider.is_subscribed %}{{ provider.is_subscribed }}{% else %}0{% endif %};
     var rawExpiryDateString = "{{ provider.subscription_expires_at if (provider and provider.subscription_expires_at) else '' }}";
     var calculatedDaysRemaining = 0;
@@ -689,47 +714,100 @@
         }
     }
 
+    // ====================================================================
+    // FIX 3: paySubscriptionFee — fixed Python ternary syntax error
+    // The bug was: "contact": user.phone if user.phone else ''
+    // (user is undefined in JS scope — must use Jinja2 templating instead)
+    // ====================================================================
     function paySubscriptionFee() {
         if (isCurrentlySubscribed === 1 && calculatedDaysRemaining > 3) {
             alert("Your premium service partner account status is already active with " + calculatedDaysRemaining + " days left. Early renewal unlocks when you have 3 or fewer days remaining.");
             return;
         }
 
+        // Safety check: ensure Razorpay script loaded
+        if (typeof Razorpay === 'undefined') {
+            alert('Payment gateway is still loading. Please wait a moment and try again.');
+            return;
+        }
+
         var options = {
             "key": "{{ razorpay_key_id }}",
-            "amount": "100", 
+            "amount": 100, 
             "currency": "INR",
             "name": "PeopleConnect",
             "description": "Monthly Service Partner Subscription Fee",
             "image": "{{ logo_url }}",
-            "handler": function (response){
+            "handler": function (response) {
+                if (!response || !response.razorpay_payment_id) {
+                    alert('Payment verification failed. No payment ID received.');
+                    return;
+                }
                 fetch('/api/subscription/verify', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ razorpay_payment_id: response.razorpay_payment_id })
                 })
-                .then(res => res.json())
-                .then(data => {
-                    alert(data.message);
+                .then(function(res) { 
+                    if (!res.ok) throw new Error('Verification HTTP ' + res.status);
+                    return res.json(); 
+                })
+                .then(function(data) {
+                    alert(data.message || 'Subscription activated successfully!');
                     window.location.href = "{{ url_for('profile') }}";
+                })
+                .catch(function(err) {
+                    console.error('Verification failed:', err);
+                    alert('Payment received but verification failed. Please contact support if your account is not activated within 10 minutes.');
                 });
             },
             "prefill": {
                 "name": "{{ user.name if user else '' }}",
                 "email": "{{ user.email if user else '' }}",
-                "contact": user.phone if user.phone else ''
+                "contact": "{{ user.phone if user and user.phone else '' }}"
             },
-            "theme": { "color": "#FF4B3E" }
+            "theme": { "color": "#FF4B3E" },
+            "modal": {
+                "ondismiss": function() {
+                    console.log('Razorpay checkout dismissed by user.');
+                }
+            }
         };
-        var rzp1 = new Razorpay(options);
-        rzp1.open();
+
+        try {
+            var rzp1 = new Razorpay(options);
+            rzp1.on('payment.failed', function(resp) {
+                alert('Payment failed: ' + (resp.error && resp.error.description ? resp.error.description : 'Unknown error'));
+            });
+            rzp1.open();
+        } catch (err) {
+            console.error('Razorpay init error:', err);
+            alert('Unable to start payment. Please refresh the page and try again.');
+        }
     }
 
+    // ====================================================================
+    // DOM Ready
+    // ====================================================================
     document.addEventListener('DOMContentLoaded', function() {
         renderSubscriptionTelemetry();
         
         {% if trigger_checkout == 'true' %}
-            paySubscriptionFee();
+            // Auto-trigger checkout after Razorpay script loads
+            setTimeout(function() {
+                if (typeof Razorpay !== 'undefined') {
+                    paySubscriptionFee();
+                } else {
+                    // Wait longer if script still loading
+                    var retryInterval = setInterval(function() {
+                        if (typeof Razorpay !== 'undefined') {
+                            clearInterval(retryInterval);
+                            paySubscriptionFee();
+                        }
+                    }, 200);
+                    setTimeout(function() { clearInterval(retryInterval); }, 5000);
+                }
+            }, 300);
         {% endif %}
     });
 </script>
